@@ -26,6 +26,11 @@ class Resizer {
   #_isResizing = false;
 
   /**
+   * Tracks if the resizer is currently added to a container
+   */
+  #_isAdded = false;
+
+  /**
    * The flex given to the first element defaults to one
    */
   #_flexOne = 1;
@@ -65,23 +70,30 @@ class Resizer {
    * @param {HTMLElement} container - The container to add resize to, this holds the elements to be resized
    */
   add(container) {
+    if (this.#_isAdded) {
+      throw new Error(
+        "Resizer is already added to a container. Call remove() first."
+      );
+    }
+
     if (!container) {
       throw new Error("Container element not passed");
     }
 
     this.#_parentContainer = container;
     if (this.#_parentContainer.children.length != 2) {
-      throw new Error("Container element contains more than two elements");
+      throw new Error("Container element must contain exactly two elements");
     }
 
     this.#addHandle();
+    this.#_isAdded = true;
   }
 
   /**
    * Remove the resize widget and any custom styles
    */
   remove() {
-    if (!this.#_parentContainer) {
+    if (!this.#_parentContainer || !this.#_isAdded) {
       throw new Error("No resizer added to a container");
     }
 
@@ -121,6 +133,18 @@ class Resizer {
     this.#_flexOne = 1;
     this.#_flexTwo = 1;
     this.#_parentContainer = undefined;
+    this.#_isAdded = false;
+  }
+
+  /**
+   * Get the current flex values of the two elements
+   * @returns {{flexOne: number, flexTwo: number}} The current flex values
+   */
+  getFlexValues() {
+    return {
+      flexOne: this.#_flexOne,
+      flexTwo: this.#_flexTwo,
+    };
   }
 
   /**
@@ -218,7 +242,7 @@ class Resizer {
       this.#_flexOne = clampedRatio;
       this.#_flexTwo = 1 - clampedRatio;
 
-      // Apply flex values to children
+      // Apply flex values to children (index 0 and 2, since handle is at index 1)
       const children = this.#_parentContainer.children;
       if (children[0] instanceof HTMLElement) {
         children[0].style.flex = this.#_flexOne.toString();
@@ -299,7 +323,7 @@ class Resizer {
       throw new Error("Min flex must be greater than 0");
     }
     if (flexNumber > 1) {
-      throw new Error("Min flex must be greater than 1");
+      throw new Error("Min flex must be less than 1");
     }
   }
 
@@ -331,9 +355,8 @@ class Resizer {
 }
 
 // Usage example
-
-setTimeout(() => {
-  var resize = new Resizer({
+document.addEventListener("DOMContentLoaded", () => {
+  const resize = new Resizer({
     direction: "horizontal",
     minFlex: 0.3,
     handleStyles: {
@@ -347,16 +370,21 @@ setTimeout(() => {
     },
   });
 
-  let target = document.getElementById("resizer_container");
+  const target = document.getElementById("resizer_container");
   if (target) {
     resize.add(target);
-    console.log("added");
+    console.log("Resizer added");
+    console.log("Initial flex values:", resize.getFlexValues());
+
+    // Try to add again - this will throw an error
+    // resize.add(target); // Uncommenting this will throw an error
 
     setTimeout(() => {
+      console.log("Current flex values:", resize.getFlexValues());
       resize.remove();
-      console.log("removed");
+      console.log("Resizer removed");
     }, 10000);
   } else {
-    console.log("Not found");
+    console.error("Container element not found");
   }
-}, 200);
+});

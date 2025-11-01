@@ -244,6 +244,7 @@ class ResizerTwo {
     const mouseMoveHandler = (event) => {
       if (!this.#_isResizing) return;
       if (!this.#_parentContainer) return;
+      if (!this.#_childOne || !this.#_childTwo) return;
 
       const containerRect = this.#_parentContainer.getBoundingClientRect();
       let position, totalSize;
@@ -270,14 +271,9 @@ class ResizerTwo {
       this.#_flexOne = clampedRatio;
       this.#_flexTwo = 1 - clampedRatio;
 
-      // Apply flex values to children (index 0 and 2, since handle is at index 1)
-      const children = this.#_parentContainer.children;
-      if (children[0] instanceof HTMLElement) {
-        children[0].style.flex = this.#_flexOne.toString();
-      }
-      if (children[2] instanceof HTMLElement) {
-        children[2].style.flex = this.#_flexTwo.toString();
-      }
+      // Apply flex values to children
+      this.#_childOne.style.flex = this.#_flexOne.toString();
+      this.#_childTwo.style.flex = this.#_flexTwo.toString();
     };
 
     const mouseUpHandler = () => {
@@ -386,7 +382,7 @@ class ResizerTwo {
 // Usage example
 document.addEventListener("DOMContentLoaded", () => {
   const resize = new ResizerTwo({
-    direction: "horizontal",
+    direction: "vertical",
     minFlex: 0.3,
     handleStyles: {
       width: "15px",

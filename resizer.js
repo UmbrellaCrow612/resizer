@@ -31,6 +31,8 @@ class Resizer {
    */
   constructor(options = { direction: "horizontal", minFlex: 0.3 }) {
     this.#_options = options;
+
+    this.#checkOptions(this.#_options);
   }
 
   /**
@@ -147,12 +149,51 @@ class Resizer {
       child.style.flex = "1";
     }
   }
+
+  /**
+   * Check if a flex number is greater than 0 and less than 1
+   * @param {number} flexNumber - The flex number to check
+   */
+  #checkMinFlex(flexNumber) {
+    if (flexNumber < 0) {
+      throw new Error("Min flex must be greater than 0");
+    }
+    if (flexNumber > 1) {
+      throw new Error("Min flex must be greater than 1");
+    }
+  }
+
+  /**
+   * Check if a direction is valid one
+   * @param {any} direction The direction to check
+   */
+  #checkDirection(direction) {
+    /** @type {resizerDirection} */
+    let h = "horizontal";
+    /** @type {resizerDirection} */
+    let v = "vertical";
+
+    let valid = new Set([h, v]);
+
+    if (!valid.has(direction)) {
+      throw new Error("Direction is not vertical or horizontal");
+    }
+  }
+
+  /**
+   * Checks if options passed confirm to our constraints
+   * @param {resizerOptions} options - The options to check
+   */
+  #checkOptions(options) {
+    this.#checkMinFlex(options.minFlex);
+    this.#checkDirection(options.direction);
+  }
 }
 
 // Usage example
 
 setTimeout(() => {
-  var resize = new Resizer();
+  var resize = new Resizer({ direction: "vertical", minFlex: 0.3 });
 
   let target = document.getElementById("resizer_container");
   if (target) {

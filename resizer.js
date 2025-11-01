@@ -1,7 +1,8 @@
 /**
- * Represents a resizer
+ * Represents a resizer this is used to resize the width / or height of two container next to each other
+ * used when you have two elements next to each other and want to allow the change width or height of said elements
  */
-class Resizer {
+class ResizerTwo {
   /**
    * Holds a ref to the container that holds the resize elements
    * @type {HTMLElement | undefined}
@@ -15,7 +16,7 @@ class Resizer {
   #_options = undefined;
 
   /**
-   * The element created to used to change the size of a container
+   * The element created to used to change the size child one and child two width of height
    * @type {HTMLDivElement | undefined}
    */
   #_handleElement = undefined;
@@ -46,9 +47,22 @@ class Resizer {
    */
   #_mouseMoveHandler = null;
   /**
-   * @type {(() => void) | null}
+   * Holds references to the event listeners for cleanup
+   * @type {((event: MouseEvent) => void) | null}
    */
   #_mouseUpHandler = null;
+
+  /**
+   * Represents the first child in the resizer
+   * @type {HTMLElement | undefined}
+   */
+  #_childOne = undefined;
+
+  /**
+   * Represents the second child in the resizer
+   * @type {HTMLElement | undefined}
+   */
+  #_childTwo = undefined;
 
   /**
    * Create a default resizer or pass options
@@ -84,9 +98,25 @@ class Resizer {
     if (this.#_parentContainer.children.length != 2) {
       throw new Error("Container element must contain exactly two elements");
     }
+    this.#setChildrenElements();
 
     this.#addHandle();
     this.#_isAdded = true;
+  }
+
+  /**
+   * Sets the child one and child two elements to the two elements in the resizer
+   */
+  #setChildrenElements() {
+    if (!this.#_parentContainer) {
+      throw new Error("Container element not passed");
+    }
+
+    /** @type {any} */
+    const children = this.#_parentContainer.children;
+
+    this.#_childOne = children[0];
+    this.#_childTwo = children[1];
   }
 
   /**
@@ -114,14 +144,11 @@ class Resizer {
     }
 
     // Remove flex styles from children
-    /** @type {any} */
-    const children = this.#_parentContainer.children;
-    for (let i = 0; i < children.length; i++) {
-      /** @type {HTMLElement} */
-      const child = children[i];
-      if (child instanceof HTMLElement) {
-        child.style.flex = "";
-      }
+    if (this.#_childOne) {
+      this.#_childOne.style.flex = "";
+    }
+    if (this.#_childTwo) {
+      this.#_childTwo.style.flex = "";
     }
 
     // Remove flex display styles from parent
@@ -132,6 +159,8 @@ class Resizer {
     this.#_isResizing = false;
     this.#_flexOne = 1;
     this.#_flexTwo = 1;
+    this.#_childOne = undefined;
+    this.#_childTwo = undefined;
     this.#_parentContainer = undefined;
     this.#_isAdded = false;
   }
@@ -184,7 +213,6 @@ class Resizer {
       this.#_handleElement.style.cursor = customStyles.cursor || "row-resize";
     }
 
-    // Apply background color (works for both directions)
     this.#_handleElement.style.backgroundColor =
       customStyles.backgroundColor || "black";
 
@@ -275,26 +303,27 @@ class Resizer {
       throw new Error("Handle element not found");
     }
 
-    const children = this.#_parentContainer.children;
-    this.#_parentContainer.insertBefore(this.#_handleElement, children[1]);
+    if (!this.#_childTwo) {
+      throw new Error(
+        "Could not find the second HTML element within the container"
+      );
+    }
+
+    this.#_parentContainer.insertBefore(this.#_handleElement, this.#_childTwo);
   }
 
   /**
-   * Adds flex 1 to the children
+   * Adds flex 1 to the child one and two
    */
   #addFlexToParentChildren() {
-    if (!this.#_parentContainer) {
-      throw new Error("Container element not passed");
+    if (!this.#_childOne || !this.#_childTwo) {
+      throw new Error(
+        "Could not find the first or second element within the container"
+      );
     }
-    /** @type {any} */
-    const children = this.#_parentContainer.children;
 
-    for (let i = 0; i < children.length; i++) {
-      /** @type {HTMLElement} */
-      const child = children[i];
-
-      child.style.flex = "1";
-    }
+    this.#_childOne.style.flex = "1";
+    this.#_childTwo.style.flex = "1";
   }
 
   /**
@@ -356,7 +385,7 @@ class Resizer {
 
 // Usage example
 document.addEventListener("DOMContentLoaded", () => {
-  const resize = new Resizer({
+  const resize = new ResizerTwo({
     direction: "horizontal",
     minFlex: 0.3,
     handleStyles: {

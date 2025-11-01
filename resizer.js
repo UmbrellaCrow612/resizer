@@ -26,6 +26,16 @@ class Resizer {
   #_isResizing = false;
 
   /**
+   * The flex given to the first element defaults to one
+   */
+  #_flexOne = 1;
+
+  /**
+   * The flex given to the second element defaults to one
+   */
+  #_flexTwo = 1;
+
+  /**
    * Create a default resizer or pass options
    * @param {resizerOptions} options - Set of options to change the resize behaviour
    */
@@ -73,7 +83,7 @@ class Resizer {
 
     this.#_handleElement = document.createElement("div");
     this.#addHandleStyles();
-    this.#adddHandleListners();
+    this.#addHandleListners();
 
     this.#addFlexToParentChildren();
     this.#addDisplayFlexDirectionToParent();
@@ -100,16 +110,63 @@ class Resizer {
     this.#_handleElement.style.backgroundColor = "black";
   }
 
-  #adddHandleListners() {
+  #addHandleListners() {
     if (!this.#_handleElement) throw new Error("Handle element not found");
     if (!this.#_parentContainer) throw new Error("Container not found");
 
-    // add listner logic uses if hor or not
+    const isHorizontal = this.#_options?.direction === "horizontal";
 
     this.#_handleElement.addEventListener("mousedown", (event) => {
       event.preventDefault();
       this.#_isResizing = true;
     });
+
+    /** @param {MouseEvent} event  */
+    const handleMouseMove = (event) => {
+      if (!this.#_isResizing) return;
+      if (!this.#_parentContainer) return;
+
+      const containerRect = this.#_parentContainer.getBoundingClientRect();
+      let position, totalSize;
+
+      if (isHorizontal) {
+        position = event.clientX - containerRect.left;
+        totalSize = containerRect.width;
+      } else {
+        position = event.clientY - containerRect.top;
+        totalSize = containerRect.height;
+      }
+
+      // Calculate the ratio for the first element
+      const ratio = position / totalSize;
+
+      // Apply min flex constraints
+      const minFlex = this.#_options?.minFlex || 0.3;
+      const maxFlex = 1 - minFlex;
+
+      // Clamp the ratio between minFlex and maxFlex
+      const clampedRatio = Math.max(minFlex, Math.min(maxFlex, ratio));
+
+      // Calculate flex values
+      this.#_flexOne = clampedRatio;
+      this.#_flexTwo = 1 - clampedRatio;
+
+      // Apply flex values to children
+      const children = this.#_parentContainer.children;
+      if (children[0] instanceof HTMLElement) {
+        children[0].style.flex = this.#_flexOne.toString();
+      }
+      if (children[2] instanceof HTMLElement) {
+        children[2].style.flex = this.#_flexTwo.toString();
+      }
+    };
+
+    const handleMouseUp = () => {
+      this.#_isResizing = false;
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
   }
 
   /**

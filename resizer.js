@@ -53,12 +53,14 @@ class Resizer {
   }
 
   /**
-   * Remove the resize widget and any styles added to it
+   * Remove the resize widget and any custom styles
    */
   remove() {
     if (!this.#_parentContainer) {
       throw new Error("No resizer added to a container");
     }
+
+    // todo remove styles added to parent and remove styles added to children and the resizer handler
   }
 
   /**
@@ -74,6 +76,7 @@ class Resizer {
     this.#adddHandleListners();
 
     this.#addFlexToParentChildren();
+    this.#addDisplayFlexDirectionToParent();
 
     this.#insertHandleIntoParent();
   }
@@ -86,13 +89,12 @@ class Resizer {
       throw new Error("Handle element not found");
     }
 
-    // add styles - based on options for now do vertical - also custom styles
     if (this.#_options?.direction === "horizontal") {
-      this.#_handleElement.style.height = "10px";
-      this.#_handleElement.style.cursor = "row-resize";
-    } else {
       this.#_handleElement.style.width = "10px";
       this.#_handleElement.style.cursor = "col-resize";
+    } else {
+      this.#_handleElement.style.height = "10px";
+      this.#_handleElement.style.cursor = "row-resize";
     }
 
     this.#_handleElement.style.backgroundColor = "black";
@@ -102,18 +104,12 @@ class Resizer {
     if (!this.#_handleElement) throw new Error("Handle element not found");
     if (!this.#_parentContainer) throw new Error("Container not found");
 
-    // add listners
-    if (this.#_options?.direction == "vertical") {
-      this.#_handleElement.addEventListener("mousedown", (event) => {
-        event.preventDefault();
-        this.#_isResizing = true;
-      });
-    } else {
-      this.#_handleElement.addEventListener("mousedown", (event) => {
-        event.preventDefault();
-        this.#_isResizing = true;
-      });
-    }
+    // add listner logic uses if hor or not
+
+    this.#_handleElement.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+      this.#_isResizing = true;
+    });
   }
 
   /**
@@ -147,6 +143,23 @@ class Resizer {
       const child = children[i];
 
       child.style.flex = "1";
+    }
+  }
+
+  /**
+   * Adds display flex and `col` or default flex based on direction
+   */
+  #addDisplayFlexDirectionToParent() {
+    if (!this.#_parentContainer) {
+      throw new Error("Container element not passed");
+    }
+
+    this.#_parentContainer.style.display = "flex";
+
+    if (this.#_options?.direction == "vertical") {
+      this.#_parentContainer.style.flexDirection = "column";
+    } else {
+      this.#_parentContainer.style.flexDirection = "row";
     }
   }
 
@@ -193,7 +206,7 @@ class Resizer {
 // Usage example
 
 setTimeout(() => {
-  var resize = new Resizer({ direction: "vertical", minFlex: 0.3 });
+  var resize = new Resizer({ direction: "horizontal", minFlex: 0.3 });
 
   let target = document.getElementById("resizer_container");
   if (target) {

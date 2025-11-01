@@ -39,9 +39,14 @@ class Resizer {
    * Create a default resizer or pass options
    * @param {resizerOptions} options - Set of options to change the resize behaviour
    */
-  constructor(options = { direction: "horizontal", minFlex: 0.3 }) {
-    this.#_options = options;
-
+  constructor(
+    options = { direction: "horizontal", minFlex: 0.3, handleStyles: {} }
+  ) {
+    this.#_options = {
+      direction: options.direction || "horizontal",
+      minFlex: options.minFlex || 0.3,
+      handleStyles: options.handleStyles || {},
+    };
     this.#checkOptions(this.#_options);
   }
 
@@ -99,15 +104,32 @@ class Resizer {
       throw new Error("Handle element not found");
     }
 
+    const customStyles = this.#_options?.handleStyles || {};
+
+    // Apply default styles based on direction
     if (this.#_options?.direction === "horizontal") {
-      this.#_handleElement.style.width = "10px";
-      this.#_handleElement.style.cursor = "col-resize";
+      this.#_handleElement.style.width = customStyles.width || "10px";
+      this.#_handleElement.style.cursor = customStyles.cursor || "col-resize";
     } else {
-      this.#_handleElement.style.height = "10px";
-      this.#_handleElement.style.cursor = "row-resize";
+      this.#_handleElement.style.height = customStyles.height || "10px";
+      this.#_handleElement.style.cursor = customStyles.cursor || "row-resize";
     }
 
-    this.#_handleElement.style.backgroundColor = "black";
+    // Apply background color (works for both directions)
+    this.#_handleElement.style.backgroundColor =
+      customStyles.backgroundColor || "black";
+
+    Object.keys(customStyles).forEach((property) => {
+      if (
+        property !== "width" &&
+        property !== "height" &&
+        property !== "backgroundColor" &&
+        property !== "cursor"
+      ) {
+        // @ts-ignore
+        this.#_handleElement.style[property] = customStyles[property];
+      }
+    });
   }
 
   #addHandleListners() {
@@ -263,7 +285,19 @@ class Resizer {
 // Usage example
 
 setTimeout(() => {
-  var resize = new Resizer({ direction: "horizontal", minFlex: 0.3 });
+  var resize = new Resizer({
+    direction: "horizontal",
+    minFlex: 0.3,
+    handleStyles: {
+      width: "15px",
+      backgroundColor: "#3b82f6",
+      cursor: "col-resize",
+      borderRadius: "4px",
+      boxShadow: "0 0 5px rgba(0,0,0,0.3)",
+      opacity: "0.8",
+      transition: "background-color 0.2s ease",
+    },
+  });
 
   let target = document.getElementById("resizer_container");
   if (target) {

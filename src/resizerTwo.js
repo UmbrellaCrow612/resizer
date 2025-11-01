@@ -402,28 +402,4 @@ class ResizerTwo {
   }
 }
 
-// Usage example
-document.addEventListener("DOMContentLoaded", () => {
-  const resize = new ResizerTwo({
-    direction: "vertical",
-    minFlex: 0.3,
-  });
-
-  const target = document.getElementById("resizer_container");
-  if (target) {
-    resize.add(target);
-    console.log("Resizer added.");
-    console.log("Initial flex values:", resize.getFlexValues());
-
-    // Try to add again - this will throw an error
-    // resize.add(target); // Uncommenting this will throw an error
-
-    setTimeout(() => {
-      console.log("Current flex values:", resize.getFlexValues());
-      resize.remove();
-      console.log("Resizer removed.");
-    }, 10000);
-  } else {
-    console.error("Container element not found.");
-  }
-});
+export default ResizerTwo

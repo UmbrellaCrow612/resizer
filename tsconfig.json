@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "checkJs": true,
+        "outDir": "./dist",
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        "declarationMap": true,
+        "module": "CommonJS",
+        "target": "ESNext",
+        "lib": [
+            "ESNext"
+        ],
+        "strict": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased file names
+        "resolveJsonModule": true // Include modules imported with '.json' extension
+    },
+    "include": [
+        "src/types.js",
+    ],
+    "exclude": [
+        "node_modules",
+    ]
+}

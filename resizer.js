@@ -36,6 +36,16 @@ class Resizer {
   #_flexTwo = 1;
 
   /**
+   * Holds references to the event listeners for cleanup
+   * @type {((event: MouseEvent) => void) | null}
+   */
+  #_mouseMoveHandler = null;
+  /**
+   * @type {(() => void) | null}
+   */
+  #_mouseUpHandler = null;
+
+  /**
    * Create a default resizer or pass options
    * @param {resizerOptions} options - Set of options to change the resize behaviour
    */
@@ -75,7 +85,42 @@ class Resizer {
       throw new Error("No resizer added to a container");
     }
 
-    // todo remove styles added to parent and remove styles added to children and the resizer handler
+    // Remove event listeners
+    if (this.#_mouseMoveHandler) {
+      document.removeEventListener("mousemove", this.#_mouseMoveHandler);
+      this.#_mouseMoveHandler = null;
+    }
+    if (this.#_mouseUpHandler) {
+      document.removeEventListener("mouseup", this.#_mouseUpHandler);
+      this.#_mouseUpHandler = null;
+    }
+
+    // Remove the handle element from DOM
+    if (this.#_handleElement && this.#_handleElement.parentNode) {
+      this.#_handleElement.parentNode.removeChild(this.#_handleElement);
+      this.#_handleElement = undefined;
+    }
+
+    // Remove flex styles from children
+    /** @type {any} */
+    const children = this.#_parentContainer.children;
+    for (let i = 0; i < children.length; i++) {
+      /** @type {HTMLElement} */
+      const child = children[i];
+      if (child instanceof HTMLElement) {
+        child.style.flex = "";
+      }
+    }
+
+    // Remove flex display styles from parent
+    this.#_parentContainer.style.display = "";
+    this.#_parentContainer.style.flexDirection = "";
+
+    // Reset state
+    this.#_isResizing = false;
+    this.#_flexOne = 1;
+    this.#_flexTwo = 1;
+    this.#_parentContainer = undefined;
   }
 
   /**
@@ -144,7 +189,7 @@ class Resizer {
     });
 
     /** @param {MouseEvent} event  */
-    const handleMouseMove = (event) => {
+    const mouseMoveHandler = (event) => {
       if (!this.#_isResizing) return;
       if (!this.#_parentContainer) return;
 
@@ -183,12 +228,15 @@ class Resizer {
       }
     };
 
-    const handleMouseUp = () => {
+    const mouseUpHandler = () => {
       this.#_isResizing = false;
     };
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    this.#_mouseMoveHandler = mouseMoveHandler;
+    this.#_mouseUpHandler = mouseUpHandler;
+
+    document.addEventListener("mousemove", this.#_mouseMoveHandler);
+    document.addEventListener("mouseup", this.#_mouseUpHandler);
   }
 
   /**
@@ -303,12 +351,12 @@ setTimeout(() => {
   if (target) {
     resize.add(target);
     console.log("added");
+
+    setTimeout(() => {
+      resize.remove();
+      console.log("removed");
+    }, 10000);
   } else {
     console.log("Not found");
   }
 }, 200);
-
-// pass options to contructor lie direction etc
-// call open
-// open adds the widget in the middle
-// add event listner

@@ -1,78 +1,77 @@
 /**
- * Represents a resizer this is used to resize the width / or height of two container next to each other
- * used when you have two elements next to each other and want to allow the change width or height of said elements
+ * Represents a resizer that is used to resize the width or height of two adjacent containers.
  */
 class ResizerTwo {
   /**
-   * Holds a ref to the container that holds the resize elements
+   * Holds a reference to the container that holds the elements to be resized.
    * @type {HTMLElement | undefined}
    */
   #_parentContainer = undefined;
 
   /**
-   * Options passed to change the resizer behaviour
+   * Options passed to change the resizer's behavior.
    * @type {resizerTwoOptions | undefined}
    */
   #_options = undefined;
 
   /**
-   * The element created to used to change the size child one and child two width of height
+   * The handle element created and used to change the width or height of the two child elements.
    * @type {HTMLDivElement | undefined}
    */
   #_handleElement = undefined;
 
   /**
-   * Indicates if resizing is happening
+   * Indicates if resizing is happening.
    */
   #_isResizing = false;
 
   /**
-   * Tracks if the resizer is currently added to a container
+   * Tracks if the resizer is currently added to a container.
    */
   #_isAdded = false;
 
   /**
-   * The flex given to the first element defaults to one
+   * The flex value given to the first element; defaults to 1.
    */
   #_flexOne = 1;
 
   /**
-   * The flex given to the second element defaults to one
+   * The flex value given to the second element; defaults to 1.
    */
   #_flexTwo = 1;
 
   /**
-   * Holds references to the event listeners for cleanup
+   * Holds a reference to the mouse move event listener for cleanup.
    * @type {((event: MouseEvent) => void) | null}
    */
   #_mouseMoveHandler = null;
   /**
-   * Holds references to the event listeners for cleanup
+   * Holds a reference to the mouse up event listener for cleanup.
    * @type {((event: MouseEvent) => void) | null}
    */
   #_mouseUpHandler = null;
 
   /**
-   * Represents the first child in the resizer
+   * Represents the first child in the resizer.
    * @type {HTMLElement | undefined}
    */
   #_childOne = undefined;
 
   /**
-   * Represents the second child in the resizer
+   * Represents the second child in the resizer.
    * @type {HTMLElement | undefined}
    */
   #_childTwo = undefined;
 
   /**
-   * List of callbacks to run when the resize logic is ran
+   * A Set of callbacks to run when the resize logic is run.
    * @type {Set<resizerTwoCallback>}
    */
   #_onResizeCallbacks = new Set();
 
   /**
-   * Create a default resizer or pass options
-   * @param {resizerTwoOptions} options - Set of options to change the resize behaviour
+   * Creates a default resizer or configures one with the provided options.
+   * @param {resizerTwoOptions} options - A set of options to change the resize behavior.
    */
   constructor(
     options = { direction: "horizontal", minFlex: 0.3, handleStyles: {} }
@@ -86,8 +85,8 @@ class ResizerTwo {
   }
 
   /**
-   * Add the resize handle and manage state of resize between elements
-   * @param {HTMLElement} container - The container to add resize to, this holds the elements to be resized
+   * Adds the resize handle and manages the resizing state between the two elements.
+   * @param {HTMLElement} container - The container to add the resizer to, which must hold exactly two child elements.
    */
   add(container) {
     if (this.#_isAdded) {
@@ -97,12 +96,12 @@ class ResizerTwo {
     }
 
     if (!container) {
-      throw new Error("Container element not passed");
+      throw new Error("Container element not passed.");
     }
 
     this.#_parentContainer = container;
-    if (this.#_parentContainer.children.length != 2) {
-      throw new Error("Container element must contain exactly two elements");
+    if (this.#_parentContainer.children.length !== 2) {
+      throw new Error("Container element must contain exactly two children.");
     }
     this.#setChildrenElements();
 
@@ -111,11 +110,11 @@ class ResizerTwo {
   }
 
   /**
-   * Sets the child one and child two elements to the two elements in the resizer
+   * Finds and sets the internal references to the two child elements within the parent container.
    */
   #setChildrenElements() {
     if (!this.#_parentContainer) {
-      throw new Error("Container element not passed");
+      throw new Error("Container element not passed.");
     }
 
     /** @type {any} */
@@ -126,11 +125,11 @@ class ResizerTwo {
   }
 
   /**
-   * Remove the resize widget and any custom styles
+   * Removes the resizer handle, event listeners, and custom styles from the container.
    */
   remove() {
     if (!this.#_parentContainer || !this.#_isAdded) {
-      throw new Error("No resizer added to a container");
+      throw new Error("No resizer has been added to a container.");
     }
 
     // Remove event listeners
@@ -143,7 +142,7 @@ class ResizerTwo {
       this.#_mouseUpHandler = null;
     }
 
-    // Remove the handle element from DOM
+    // Remove the handle element from the DOM
     if (this.#_handleElement && this.#_handleElement.parentNode) {
       this.#_handleElement.parentNode.removeChild(this.#_handleElement);
       this.#_handleElement = undefined;
@@ -173,9 +172,9 @@ class ResizerTwo {
   }
 
   /**
-   * Listen to on resize changes and run custom logic
+   * Registers a callback function to be executed when a resize event occurs.
    * @param {resizerTwoCallback} callback
-   * @returns {(() => void)} Unsubscribe function that removes the said callback
+   * @returns {(() => void)} An unsubscribe function that removes the registered callback.
    */
   onResize(callback) {
     this.#_onResizeCallbacks.add(callback);
@@ -184,8 +183,8 @@ class ResizerTwo {
   }
 
   /**
-   * Get the current flex values of the two elements
-   * @returns {{flexOne: number, flexTwo: number}} The current flex values
+   * Gets the current flex values of the two elements.
+   * @returns {{flexOne: number, flexTwo: number}} The current flex values.
    */
   getFlexValues() {
     return {
@@ -195,11 +194,11 @@ class ResizerTwo {
   }
 
   /**
-   * Adds the resizer handle bar, listners and styles
+   * Adds the resizer handle, listeners, and styles.
    */
   #addHandle() {
     if (!this.#_parentContainer) {
-      throw new Error("Container element not passed");
+      throw new Error("Container element not passed.");
     }
 
     this.#_handleElement = document.createElement("div");
@@ -213,11 +212,11 @@ class ResizerTwo {
   }
 
   /**
-   * Adds the styles to the handle element
+   * Adds the styles to the handle element.
    */
   #addHandleStyles() {
     if (!this.#_handleElement) {
-      throw new Error("Handle element not found");
+      throw new Error("Handle element not found.");
     }
 
     const customStyles = this.#_options?.handleStyles || {};
@@ -247,9 +246,12 @@ class ResizerTwo {
     });
   }
 
+  /**
+   * Adds the mousedown, mousemove, and mouseup event listeners for resizing logic.
+   */
   #addHandleListeners() {
-    if (!this.#_handleElement) throw new Error("Handle element not found");
-    if (!this.#_parentContainer) throw new Error("Container not found");
+    if (!this.#_handleElement) throw new Error("Handle element not found.");
+    if (!this.#_parentContainer) throw new Error("Container not found.");
 
     const isHorizontal = this.#_options?.direction === "horizontal";
 
@@ -309,20 +311,20 @@ class ResizerTwo {
   }
 
   /**
-   * Adds the handle html element into the parent container
+   * Inserts the handle HTML element into the parent container between the two children.
    */
   #insertHandleIntoParent() {
     if (!this.#_parentContainer) {
-      throw new Error("No resizer added to a container");
+      throw new Error("No resizer has been added to a container.");
     }
 
     if (!this.#_handleElement) {
-      throw new Error("Handle element not found");
+      throw new Error("Handle element not found.");
     }
 
     if (!this.#_childTwo) {
       throw new Error(
-        "Could not find the second HTML element within the container"
+        "Could not find the second HTML element within the container."
       );
     }
 
@@ -330,12 +332,12 @@ class ResizerTwo {
   }
 
   /**
-   * Adds flex 1 to the child one and two
+   * Adds 'flex: 1' to the first and second child elements.
    */
   #addFlexToParentChildren() {
     if (!this.#_childOne || !this.#_childTwo) {
       throw new Error(
-        "Could not find the first or second element within the container"
+        "Could not find the first or second element within the container."
       );
     }
 
@@ -344,16 +346,16 @@ class ResizerTwo {
   }
 
   /**
-   * Adds display flex and `col` or default flex based on direction
+   * Sets the parent container's display to 'flex' and sets 'flexDirection' based on the orientation.
    */
   #addDisplayFlexDirectionToParent() {
     if (!this.#_parentContainer) {
-      throw new Error("Container element not passed");
+      throw new Error("Container element not passed.");
     }
 
     this.#_parentContainer.style.display = "flex";
 
-    if (this.#_options?.direction == "vertical") {
+    if (this.#_options?.direction === "vertical") {
       this.#_parentContainer.style.flexDirection = "column";
     } else {
       this.#_parentContainer.style.flexDirection = "row";
@@ -361,38 +363,38 @@ class ResizerTwo {
   }
 
   /**
-   * Check if a flex number is greater than 0 and less than 1
-   * @param {number} flexNumber - The flex number to check
+   * Checks if a flex number is greater than 0 and less than 1.
+   * @param {number} flexNumber - The flex number to check.
    */
   #checkMinFlex(flexNumber) {
     if (flexNumber < 0) {
-      throw new Error("Min flex must be greater than 0");
+      throw new Error("minFlex must be greater than 0.");
     }
-    if (flexNumber > 1) {
-      throw new Error("Min flex must be less than 1");
+    if (flexNumber >= 1) {
+      throw new Error("minFlex must be less than 1.");
     }
   }
 
   /**
-   * Check if a direction is valid one
-   * @param {any} direction The direction to check
+   * Checks if a direction is a valid one.
+   * @param {any} direction - The direction to check.
    */
   #checkDirection(direction) {
     /** @type {resizerTwoDirection} */
-    let h = "horizontal";
+    const h = "horizontal";
     /** @type {resizerTwoDirection} */
-    let v = "vertical";
+    const v = "vertical";
 
-    let valid = new Set([h, v]);
+    const valid = new Set([h, v]);
 
     if (!valid.has(direction)) {
-      throw new Error("Direction is not vertical or horizontal");
+      throw new Error("Direction must be 'vertical' or 'horizontal'.");
     }
   }
 
   /**
-   * Checks if options passed confirm to our constraints
-   * @param {resizerTwoOptions} options - The options to check
+   * Checks if the passed options conform to the required constraints.
+   * @param {resizerTwoOptions} options - The options to check.
    */
   #checkOptions(options) {
     this.#checkMinFlex(options.minFlex);
@@ -410,7 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const target = document.getElementById("resizer_container");
   if (target) {
     resize.add(target);
-    console.log("Resizer added");
+    console.log("Resizer added.");
     console.log("Initial flex values:", resize.getFlexValues());
 
     // Try to add again - this will throw an error
@@ -419,9 +421,9 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       console.log("Current flex values:", resize.getFlexValues());
       resize.remove();
-      console.log("Resizer removed");
+      console.log("Resizer removed.");
     }, 10000);
   } else {
-    console.error("Container element not found");
+    console.error("Container element not found.");
   }
 });

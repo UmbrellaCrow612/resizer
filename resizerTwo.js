@@ -11,7 +11,7 @@ class ResizerTwo {
 
   /**
    * Options passed to change the resizer behaviour
-   * @type {resizerOptions | undefined}
+   * @type {resizerTwoOptions | undefined}
    */
   #_options = undefined;
 
@@ -65,8 +65,14 @@ class ResizerTwo {
   #_childTwo = undefined;
 
   /**
+   * List of callbacks to run when the resize logic is ran
+   * @type {Set<resizerTwoCallback>}
+   */
+  #_onResizeCallbacks = new Set();
+
+  /**
    * Create a default resizer or pass options
-   * @param {resizerOptions} options - Set of options to change the resize behaviour
+   * @param {resizerTwoOptions} options - Set of options to change the resize behaviour
    */
   constructor(
     options = { direction: "horizontal", minFlex: 0.3, handleStyles: {} }
@@ -162,7 +168,19 @@ class ResizerTwo {
     this.#_childOne = undefined;
     this.#_childTwo = undefined;
     this.#_parentContainer = undefined;
+    this.#_onResizeCallbacks = new Set();
     this.#_isAdded = false;
+  }
+
+  /**
+   * Listen to on resize changes and run custom logic
+   * @param {resizerTwoCallback} callback
+   * @returns {(() => void)} Unsubscribe function that removes the said callback
+   */
+  onResize(callback) {
+    this.#_onResizeCallbacks.add(callback);
+
+    return () => this.#_onResizeCallbacks.delete(callback);
   }
 
   /**
@@ -186,7 +204,7 @@ class ResizerTwo {
 
     this.#_handleElement = document.createElement("div");
     this.#addHandleStyles();
-    this.#addHandleListners();
+    this.#addHandleListeners();
 
     this.#addFlexToParentChildren();
     this.#addDisplayFlexDirectionToParent();
@@ -229,7 +247,7 @@ class ResizerTwo {
     });
   }
 
-  #addHandleListners() {
+  #addHandleListeners() {
     if (!this.#_handleElement) throw new Error("Handle element not found");
     if (!this.#_parentContainer) throw new Error("Container not found");
 
@@ -274,6 +292,9 @@ class ResizerTwo {
       // Apply flex values to children
       this.#_childOne.style.flex = this.#_flexOne.toString();
       this.#_childTwo.style.flex = this.#_flexTwo.toString();
+
+      // Run callbacks
+      this.#_onResizeCallbacks.forEach((cb) => cb());
     };
 
     const mouseUpHandler = () => {
@@ -357,9 +378,9 @@ class ResizerTwo {
    * @param {any} direction The direction to check
    */
   #checkDirection(direction) {
-    /** @type {resizerDirection} */
+    /** @type {resizerTwoDirection} */
     let h = "horizontal";
-    /** @type {resizerDirection} */
+    /** @type {resizerTwoDirection} */
     let v = "vertical";
 
     let valid = new Set([h, v]);
@@ -371,7 +392,7 @@ class ResizerTwo {
 
   /**
    * Checks if options passed confirm to our constraints
-   * @param {resizerOptions} options - The options to check
+   * @param {resizerTwoOptions} options - The options to check
    */
   #checkOptions(options) {
     this.#checkMinFlex(options.minFlex);
@@ -384,15 +405,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const resize = new ResizerTwo({
     direction: "vertical",
     minFlex: 0.3,
-    handleStyles: {
-      width: "15px",
-      backgroundColor: "#3b82f6",
-      cursor: "col-resize",
-      borderRadius: "4px",
-      boxShadow: "0 0 5px rgba(0,0,0,0.3)",
-      opacity: "0.8",
-      transition: "background-color 0.2s ease",
-    },
   });
 
   const target = document.getElementById("resizer_container");

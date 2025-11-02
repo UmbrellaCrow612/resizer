@@ -1,20 +1,27 @@
 {
     "compilerOptions": {
+        // Output both JS and declaration files
+        "declaration": true,
+        "declarationMap": true,
+        "outDir": "./dist",
+        // Input settings
         "allowJs": true,
         "checkJs": true,
-        "declaration": true,
-        "emitDeclarationOnly": true,
-        "outDir": "dist",
+        // Module settings
         "module": "ESNext",
-        "target": "ES2017",
+        "moduleResolution": "node",
+        "target": "ES2020",
+        // Type checking
         "strict": true,
         "esModuleInterop": true,
+        "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true
     },
     "include": [
-        "src/**/*.js"
+        "src/**/*"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "dist"
     ]
 }

@@ -1,4 +1,11 @@
 /**
+ * @typedef {import('./types.js').resizerTwoOptions} resizerTwoOptions
+ * @typedef {import('./types.js').resizerTwoCallback} resizerTwoCallback
+ * @typedef {import('./types.js').handleStyles} handleStyles
+ * @typedef {import('./types.js').resizerTwoDirection} resizerTwoDirection
+ */
+
+/**
  * Represents a resizer that is used to resize the width or height of two adjacent containers.
  */
 class ResizerTwo {
@@ -402,4 +409,4 @@ class ResizerTwo {
   }
 }
 
-export default ResizerTwo
+export default ResizerTwo;

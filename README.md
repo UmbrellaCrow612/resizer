@@ -114,6 +114,8 @@ body {
 
    → Ensure it only includes your JS and `.d.ts` files.
 
+- Then pack the version `npm version patch`
+
 3. Publish to npm
 
    ```bash

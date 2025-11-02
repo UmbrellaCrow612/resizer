@@ -2,23 +2,19 @@
     "compilerOptions": {
         "allowJs": true,
         "checkJs": true,
-        "outFile": "./dist/index",
         "declaration": true,
         "emitDeclarationOnly": true,
-        "module": "CommonJS",
-        "target": "ESNext",
-        "lib": [
-            "ESNext"
-        ],
+        "outDir": "dist",
+        "module": "ESNext",
+        "target": "ES2017",
         "strict": true,
         "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "resolveJsonModule": true 
+        "forceConsistentCasingInFileNames": true
     },
     "include": [
-        "src/types.js",
+        "src/**/*.js"
     ],
     "exclude": [
-        "node_modules",
+        "node_modules"
     ]
 }

@@ -104,6 +104,8 @@ body {
    npm run build:types
    ```
 
+- Copy over the resizer js file into dist
+
 2. Check your package contents
 
    ```bash

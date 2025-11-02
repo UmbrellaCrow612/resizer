@@ -1,11 +1,4 @@
 /**
- * @typedef {import('./types.js').resizerTwoOptions} resizerTwoOptions
- * @typedef {import('./types.js').resizerTwoCallback} resizerTwoCallback
- * @typedef {import('./types.js').handleStyles} handleStyles
- * @typedef {import('./types.js').resizerTwoDirection} resizerTwoDirection
- */
-
-/**
  * Represents a resizer that is used to resize the width or height of two adjacent containers.
  */
 class ResizerTwo {
@@ -17,7 +10,7 @@ class ResizerTwo {
 
   /**
    * Options passed to change the resizer's behavior.
-   * @type {resizerTwoOptions | undefined}
+   * @type {import("./types.js").resizerTwoOptions | undefined}
    */
   #_options = undefined;
 
@@ -72,13 +65,13 @@ class ResizerTwo {
 
   /**
    * A Set of callbacks to run when the resize logic is run.
-   * @type {Set<resizerTwoCallback>}
+   * @type {Set<import("./types.js").resizerTwoCallback>}
    */
   #_onResizeCallbacks = new Set();
 
   /**
    * Creates a default resizer or configures one with the provided options.
-   * @param {resizerTwoOptions} options - A set of options to change the resize behavior.
+   * @param {import("./types.js").resizerTwoOptions} options - A set of options to change the resize behavior.
    */
   constructor(
     options = { direction: "horizontal", minFlex: 0.3, handleStyles: {} }
@@ -180,7 +173,7 @@ class ResizerTwo {
 
   /**
    * Registers a callback function to be executed when a resize event occurs.
-   * @param {resizerTwoCallback} callback
+   * @param {import("./types.js").resizerTwoCallback} callback
    * @returns {(() => void)} An unsubscribe function that removes the registered callback.
    */
   onResize(callback) {
@@ -387,9 +380,9 @@ class ResizerTwo {
    * @param {any} direction - The direction to check.
    */
   #checkDirection(direction) {
-    /** @type {resizerTwoDirection} */
+    /** @type {import("./types.js").resizerTwoDirection} */
     const h = "horizontal";
-    /** @type {resizerTwoDirection} */
+    /** @type {import("./types.js").resizerTwoDirection} */
     const v = "vertical";
 
     const valid = new Set([h, v]);
@@ -401,7 +394,7 @@ class ResizerTwo {
 
   /**
    * Checks if the passed options conform to the required constraints.
-   * @param {resizerTwoOptions} options - The options to check.
+   * @param {import("./types.js").resizerTwoOptions} options - The options to check.
    */
   #checkOptions(options) {
     this.#checkMinFlex(options.minFlex);

@@ -5,7 +5,7 @@
   "types": "dist/index.d.ts",
   "main": "dist/resizerTwo.js",
   "scripts": {
-    "build:types": "tsc --build && cp src/resizerTwo.js dist/resizerTwo.js"
+    "build:types": "tsc --build"
   },
   "keywords": [
     "resizer",

@@ -19,6 +19,11 @@
     "dist",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/UmbrellaCrow612/resizer.git"
+  },
+  "homepage": "https://github.com/UmbrellaCrow612/resizer?tab=readme-ov-file#resizer-two",
   "devDependencies": {
     "typescript": "^5.9.3"
   }

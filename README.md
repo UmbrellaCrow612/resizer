@@ -98,13 +98,12 @@ body {
 
 ## ⚙️ Building
 
-1. Generate TypeScript types
+1. Build the dist
 
    ```bash
-   npm run build:types
+   cd root
+   PS C:\dev\resizer> node .\scripts\build.js
    ```
-
-- Copy over the resizer js file into dist
 
 2. Check your package contents
 

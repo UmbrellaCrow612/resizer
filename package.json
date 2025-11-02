@@ -2,8 +2,8 @@
   "name": "umbr-resizer-two",
   "version": "1.0.3",
   "description": "A simple, dependency-free vanilla JS class for resizable split views.",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "main": "dist/resizerTwo.js",
   "scripts": {
     "build:types": "tsc --build"
   },

@@ -162,8 +162,6 @@ class ResizerTwo {
 
     // Reset state
     this.#_isResizing = false;
-    this.#_flexOne = 1;
-    this.#_flexTwo = 1;
     this.#_childOne = undefined;
     this.#_childTwo = undefined;
     this.#_parentContainer = undefined;
@@ -332,7 +330,7 @@ class ResizerTwo {
   }
 
   /**
-   * Adds 'flex: 1' to the first and second child elements.
+   * Adds flex values to the first and second child elements.
    */
   #addFlexToParentChildren() {
     if (!this.#_childOne || !this.#_childTwo) {
@@ -341,8 +339,8 @@ class ResizerTwo {
       );
     }
 
-    this.#_childOne.style.flex = "1";
-    this.#_childTwo.style.flex = "1";
+    this.#_childOne.style.flex = this.#_flexOne.toString();
+    this.#_childTwo.style.flex = this.#_flexTwo.toString();
   }
 
   /**

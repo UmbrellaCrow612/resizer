@@ -2,10 +2,9 @@
     "compilerOptions": {
         "allowJs": true,
         "checkJs": true,
-        "outDir": "./dist",
+        "outFile": "./dist/index",
         "declaration": true,
         "emitDeclarationOnly": true,
-        "declarationMap": true,
         "module": "CommonJS",
         "target": "ESNext",
         "lib": [
@@ -13,8 +12,8 @@
         ],
         "strict": true,
         "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased file names
-        "resolveJsonModule": true // Include modules imported with '.json' extension
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true 
     },
     "include": [
         "src/types.js",

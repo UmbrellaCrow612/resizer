@@ -1,17 +1,25 @@
-# Resizer two
+# Resizer Two
 
-Small libary allows you to resize width or height or two elements with a resizer
+A small, dependency-free library that allows you to resize the width or height of **two elements** using a resizable handle.
 
-Design:
+---
 
-- Used for onyl to elements
-- Apply to a parent wrapper fo two elements
-- Offers a handle to resize the flex of the two
+## 🧩 Design
 
-Will not do:
+- Designed specifically for **two elements only**
+- Apply it to a **parent wrapper** containing the two elements
+- Provides a **handle** to resize the flex ratio between them
 
-- Hanbdle multiple chidren. Designed for two elements - you can make multiple clases in diffrent areas or components and use them in
-  conjunction to get multiple resize areas that play with each other but the libary itself is aimed at two elements
+---
+
+## 🚫 Limitations
+
+- ❌ Does **not** handle multiple children — it’s strictly for two elements
+- You can, however, create **multiple instances** of `ResizerTwo` in different containers or components to achieve complex multi-pane layouts
+
+---
+
+## 🧠 Example Usage
 
 ```html
 <!DOCTYPE html>
@@ -35,8 +43,8 @@ Will not do:
           console.log("Resizer added.");
           console.log("Initial flex values:", resize.getFlexValues());
 
-          // Try to add again - this will throw an error
-          // resize.add(target); // Uncommenting this will throw an error
+          // Uncommenting this will throw an error (already added)
+          // resize.add(target);
 
           setTimeout(() => {
             console.log("Current flex values:", resize.getFlexValues());
@@ -48,7 +56,7 @@ Will not do:
         }
       });
     </script>
-    <title>Document</title>
+    <title>Resizer Two Example</title>
   </head>
   <body>
     <div class="wrapper" id="resizer_container">
@@ -58,6 +66,10 @@ Will not do:
   </body>
 </html>
 ```
+
+---
+
+### Example CSS
 
 ```css
 * {
@@ -82,11 +94,28 @@ body {
 }
 ```
 
+---
 
-# Building 
+## ⚙️ Building
 
-Run 
+1. Generate TypeScript types
 
-- `npm run build:types`
-- `remove other files from dist and leave .d file`
-- `npm run build`
+   ```bash
+   npm run build:types
+   ```
+
+2. Check your package contents
+
+   ```bash
+   npm pack
+   ```
+
+   → Ensure it only includes your JS and `.d.ts` files.
+
+3. Publish to npm
+
+   ```bash
+   npm publish --access public
+   ```
+
+_(Remember to bump the version before publishing new releases!)_

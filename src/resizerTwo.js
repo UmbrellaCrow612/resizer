@@ -125,13 +125,9 @@ class ResizerTwo {
   }
 
   /**
-   * Removes the resizer handle, event listeners, and custom styles from the container.
+   * Safely removes the resizer handle, event listeners, and custom styles from the parent container
    */
   remove() {
-    if (!this.#_parentContainer || !this.#_isAdded) {
-      throw new Error("No resizer has been added to a container.");
-    }
-
     // Remove event listeners
     if (this.#_mouseMoveHandler) {
       document.removeEventListener("mousemove", this.#_mouseMoveHandler);
@@ -157,8 +153,10 @@ class ResizerTwo {
     }
 
     // Remove flex display styles from parent
-    this.#_parentContainer.style.display = "";
-    this.#_parentContainer.style.flexDirection = "";
+    if (this.#_parentContainer) {
+      this.#_parentContainer.style.display = "";
+      this.#_parentContainer.style.flexDirection = "";
+    }
 
     // Reset state
     this.#_isResizing = false;

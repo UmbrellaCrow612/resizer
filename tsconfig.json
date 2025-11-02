@@ -1,17 +1,13 @@
 {
     "compilerOptions": {
-        // Output both JS and declaration files
         "declaration": true,
         "declarationMap": true,
         "outDir": "./dist",
-        // Input settings
         "allowJs": true,
         "checkJs": true,
-        // Module settings
         "module": "ESNext",
         "moduleResolution": "node",
         "target": "ES2020",
-        // Type checking
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,

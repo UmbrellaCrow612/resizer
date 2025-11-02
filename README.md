@@ -101,8 +101,7 @@ body {
 1. Build the dist
 
    ```bash
-   cd root
-   PS C:\dev\resizer> node .\scripts\build.js
+   npm run build
    ```
 
 2. Check your package contents

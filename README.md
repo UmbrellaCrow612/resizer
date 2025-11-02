@@ -19,52 +19,67 @@ A small, dependency-free library that allows you to resize the width or height o
 
 ---
 
-## 🧠 Example Usage
+## 🧠 Example Usage (via npm)
+
+### 1️⃣ Install the package
+
+```bash
+npm install umbr-resizer-two
+```
+
+### 2️⃣ Import and use it
+
+#### **In HTML (via CDN or local build)**
+
+If you want to use it directly in a browser, include it via CDN or your built bundle:
 
 ```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="styles.css" />
-    <script src="./src/resizerTwo.js"></script>
+<script type="module">
+  import { ResizerTwo } from "umbr-resizer-two";
 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const resize = new ResizerTwo({
-          direction: "vertical",
-          minFlex: 0.3,
-        });
+  document.addEventListener("DOMContentLoaded", () => {
+    const resize = new ResizerTwo({
+      direction: "vertical",
+      minFlex: 0.3,
+    });
 
-        const target = document.getElementById("resizer_container");
-        if (target) {
-          resize.add(target);
-          console.log("Resizer added.");
-          console.log("Initial flex values:", resize.getFlexValues());
+    const target = document.getElementById("resizer_container");
+    if (target) {
+      resize.add(target);
+      console.log("Resizer added.");
+      console.log("Initial flex values:", resize.getFlexValues());
 
-          // Uncommenting this will throw an error (already added)
-          // resize.add(target);
+      setTimeout(() => {
+        console.log("Current flex values:", resize.getFlexValues());
+        resize.remove();
+        console.log("Resizer removed.");
+      }, 10000);
+    } else {
+      console.error("Container element not found.");
+    }
+  });
+</script>
 
-          setTimeout(() => {
-            console.log("Current flex values:", resize.getFlexValues());
-            resize.remove();
-            console.log("Resizer removed.");
-          }, 10000);
-        } else {
-          console.error("Container element not found.");
-        }
-      });
-    </script>
-    <title>Resizer Two Example</title>
-  </head>
-  <body>
-    <div class="wrapper" id="resizer_container">
-      <div>resize one</div>
-      <div>resize two</div>
-    </div>
-  </body>
-</html>
+<div class="wrapper" id="resizer_container">
+  <div>resize one</div>
+  <div>resize two</div>
+</div>
+```
+
+---
+
+#### **In JavaScript / TypeScript project**
+
+```js
+import { ResizerTwo } from "umbr-resizer-two";
+
+const resize = new ResizerTwo({
+  direction: "horizontal", // or "vertical"
+  minFlex: 0.2,
+});
+
+const container = document.getElementById("resizer_container");
+resize.add(container);
 ```
 
 ---
@@ -96,15 +111,15 @@ body {
 
 ---
 
-## ⚙️ Building
+## ⚙️ Building Locally
 
-1. Build the dist
+1. Build the distribution bundle
 
    ```bash
    npm run build
    ```
 
-2. Check your package contents
+2. Verify your package contents
 
    ```bash
    npm pack
@@ -112,12 +127,16 @@ body {
 
    → Ensure it only includes your JS and `.d.ts` files.
 
-- Then pack the version `npm version patch`
+3. Bump the version before publishing
 
-3. Publish to npm
+   ```bash
+   npm version patch
+   ```
+
+4. Publish to npm
 
    ```bash
    npm publish --access public
    ```
 
-_(Remember to bump the version before publishing new releases!)_
+---

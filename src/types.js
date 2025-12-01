@@ -29,11 +29,5 @@
  * @typedef {"vertical" | "horizontal"} resizerTwoDirection
  */
 
-/**
- * A callback to run when the resize logic is ran
- * @callback resizerTwoCallback
- * @returns {void} Nothing
- */
-
 
 export {}

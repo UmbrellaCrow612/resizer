@@ -1,142 +1,83 @@
-# Resizer Two
+# umbr-resizer-two
 
-A small, dependency-free library that allows you to resize the width or height of **two elements** using a resizable handle.
+A lightweight, zero-dependency TypeScript library that automatically manages a resizable handle between two children in a container. It uses a `MutationObserver` to stay active even if panels are dynamically added or removed.
 
----
-
-## 🧩 Design
-
-- Designed specifically for **two elements only**
-- Apply it to a **parent wrapper** containing the two elements
-- Provides a **handle** to resize the flex ratio between them
-
----
-
-## 🚫 Limitations
-
-- ❌ Does **not** handle multiple children — it’s strictly for two elements
-- You can, however, create **multiple instances** of `ResizerTwo` in different containers or components to achieve complex multi-pane layouts
-
----
-
-## 🧠 Example Usage (via npm)
-
-### 1️⃣ Install the package
+## Installation
 
 ```bash
 npm install umbr-resizer-two
 ```
 
-### 2️⃣ Import and use it
+---
 
-#### **In HTML (via CDN or local build)**
+## Features
 
-If you want to use it directly in a browser, include it via CDN or your built bundle:
+* **Dynamic Detection**: Automatically injects a resizer handle when exactly two children are present.
+* **Flex-Based**: Uses CSS flexbox for smooth, responsive layouts.
+* **Directional Support**: Supports both `horizontal` (columns) and `vertical` (rows) resizing.
+* **State Persistence**: Easily save and restore panel sizes using callbacks.
+* **Highly Customizable**: Pass custom CSS properties directly to the resizer handle.
+
+---
+
+## Quick Start
+
+### HTML Structure
+
+You only need a container with two child elements.
 
 ```html
-<script type="module">
-  import { ResizerTwo } from "umbr-resizer-two";
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const resize = new ResizerTwo({
-      direction: "vertical",
-      minFlex: 0.3,
-    });
-
-    const target = document.getElementById("resizer_container");
-    if (target) {
-      resize.add(target);
-      console.log("Resizer added.");
-      console.log("Initial flex values:", resize.getFlexValues());
-
-      setTimeout(() => {
-        console.log("Current flex values:", resize.getFlexValues());
-        resize.remove();
-        console.log("Resizer removed.");
-      }, 10000);
-    } else {
-      console.error("Container element not found.");
-    }
-  });
-</script>
-
-<div class="wrapper" id="resizer_container">
-  <div>resize one</div>
-  <div>resize two</div>
+<div id="container">
+  <div class="panel">Panel 1</div>
+  <div class="panel">Panel 2</div>
 </div>
+
 ```
 
----
+### Initialization
 
-#### **In JavaScript / TypeScript project**
+```javascript
+import { ResizerTwo } from 'umbr-resizer-two';
 
-```js
-import { ResizerTwo } from "umbr-resizer-two";
+const container = document.getElementById("container");
 
-const resize = new ResizerTwo({
+const resizer = new ResizerTwo({
+  container: container,
   direction: "horizontal", // or "vertical"
-  minFlex: 0.2,
+  minFlex: { firstChild: 0.1, secondChild: 0.1 },
+  handleStyles: {
+    width: "5px",
+    backgroundColor: "#555",
+    cursor: "col-resize",
+  },
+  initalFlex: { firstChild: 1, secondChild: 1 }, 
 });
 
-const container = document.getElementById("resizer_container");
-resize.add(container);
+// Save the state when the user finishes resizing
+resizer.on(() => {
+  const currentValues = resizer.getFlexValues();
+  localStorage.setItem('my_layout', JSON.stringify(currentValues));
+});
+
 ```
 
 ---
 
-### Example CSS
+## Options API
 
-```css
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html,
-body {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  min-height: 0;
-  min-width: 0;
-}
-
-.wrapper {
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
-}
-```
+| Property | Type | Description |
+| --- | --- | --- |
+| `container` | `HTMLDivElement` | The parent element containing the two panels. |
+| `direction` | `"horizontal" | "vertical"` | The flow of the children. |
+| `minFlex` | `ResizerTwoChildrenFlex` | The minimum flex value allowed for each child. |
+| `initalFlex` | `ResizerTwoChildrenFlex` | (Optional) The starting flex values for the panels. |
+| `handleStyles` | `Record<string, string>` | CSS key-value pairs to style the resizer handle. |
 
 ---
 
-## ⚙️ Building Locally
+## Methods
 
-1. Build the distribution bundle
-
-   ```bash
-   npm run build
-   ```
-
-2. Verify your package contents
-
-   ```bash
-   npm pack
-   ```
-
-   → Ensure it only includes your JS and `.d.ts` files.
-
-3. Bump the version before publishing
-
-   ```bash
-   npm version patch
-   ```
-
-4. Publish to npm
-
-   ```bash
-   npm publish --access public
-   ```
-
----
+* **`on(callback: () => void)`**: Adds a listener that fires whenever the panels are resized.
+* **`getFlexValues()`**: Returns the current flex values for both children.
+* **`remove(callback: () => void)`**: Removes a specific listener.
+* **`dispose()`**: Cleans up the mutation observer, event listeners, and removes the handle from the DOM.

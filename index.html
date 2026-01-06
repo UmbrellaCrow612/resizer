@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ResizerTwo Demo - CSS Variables</title>
+    <style>
+      :root {
+        /* Define your CSS variables here */
+        --resizer-width: 6px;
+        --resizer-bg: #2c3e50;
+        --resizer-cursor: col-resize;
+      }
+
+      body, html {
+        height: 100%;
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      #container {
+        height: 100%;
+        width: 100%;
+        border: 1px solid #ccc;
+      }
+
+      .panel {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f0f0f0;
+        border: 1px solid #aaa;
+        min-height: 50px;
+        min-width: 50px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div class="panel">Panel 1</div>
+      <div class="panel">Panel 2</div>
+    </div>
+
+    <script type="module">
+      import { ResizerTwo } from "./dist/index.js";
+
+      const container = document.getElementById("container");
+      const STORAGE_KEY = "resizer_flex_values";
+
+      let savedFlex = { firstChild: 1, secondChild: 1 };
+      const rawData = localStorage.getItem(STORAGE_KEY);
+
+      if (rawData) {
+        try {
+          savedFlex = JSON.parse(rawData);
+        } catch (e) {
+          console.error("Failed to parse saved flex values", e);
+        }
+      }
+
+      const resizer = new ResizerTwo({
+        container: container,
+        direction: "horizontal",
+        minFlex: { firstChild: 0.1, secondChild: 0.1 },
+        handleStyles: {
+          /* Pass the CSS variable names exactly as they appear in your CSS.
+             The library's isCssVariable check will detect the '--' 
+             and use getComputedStyle to resolve them.
+          */
+          width: "--resizer-width",
+          backgroundColor: "--resizer-bg",
+          cursor: "--resizer-cursor",
+        },
+        initalFlex: savedFlex, 
+      });
+
+      resizer.on(() => {
+        const currentValues = resizer.getFlexValues();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentValues));
+      });
+
+      // Dynamic panel logic
+      setTimeout(() => {
+        const panels = container.querySelectorAll(".panel");
+        if (panels.length >= 2) {
+          panels[1].remove();
+          setTimeout(() => {
+            const newPanel = document.createElement("div");
+            newPanel.className = "panel";
+            newPanel.textContent = "New Panel 2";
+            container.appendChild(newPanel);
+          }, 5000);
+        }
+      }, 5000);
+    </script>
+  </body>
+</html>

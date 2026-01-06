@@ -169,12 +169,12 @@ export class ResizerTwo {
   }
 
   /**
-   * Checks if a string is a CSS var (checks if it contains `--`)
+   * Checks if a string is a CSS var (checks if it starts with '--')
    * @param str The string to check
    * @returns True or false
    */
   private isCssVariable(str: string): boolean {
-    return str.indexOf("--") > 0;
+    return str.indexOf("--") >= 0;
   }
 
   /**

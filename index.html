@@ -3,10 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ResizerTwo Demo</title>
+    <title>ResizerTwo Demo - CSS Variables</title>
     <style>
-      body,
-      html {
+      :root {
+        /* Define your CSS variables here */
+        --resizer-width: 6px;
+        --resizer-bg: #2c3e50;
+        --resizer-cursor: col-resize;
+      }
+
+      body, html {
         height: 100%;
         margin: 0;
         font-family: Arial, sans-serif;
@@ -27,13 +33,6 @@
         min-height: 50px;
         min-width: 50px;
         overflow: hidden;
-      }
-
-      /* Default handle styles (optional fallback) */
-      .handle {
-        background-color: #888;
-        width: 5px;
-        cursor: col-resize;
       }
     </style>
   </head>
@@ -65,9 +64,13 @@
         direction: "horizontal",
         minFlex: { firstChild: 0.1, secondChild: 0.1 },
         handleStyles: {
-          width: "5px",
-          backgroundColor: "#555",
-          cursor: "col-resize",
+          /* Pass the CSS variable names exactly as they appear in your CSS.
+             The library's isCssVariable check will detect the '--' 
+             and use getComputedStyle to resolve them.
+          */
+          width: "--resizer-width",
+          backgroundColor: "--resizer-bg",
+          cursor: "--resizer-cursor",
         },
         initalFlex: savedFlex, 
       });
@@ -77,21 +80,16 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(currentValues));
       });
 
-      // Your existing dynamic panel logic
+      // Dynamic panel logic
       setTimeout(() => {
         const panels = container.querySelectorAll(".panel");
         if (panels.length >= 2) {
           panels[1].remove();
-          console.log("Panel 2 removed.");
-
           setTimeout(() => {
             const newPanel = document.createElement("div");
             newPanel.className = "panel";
             newPanel.textContent = "New Panel 2";
             container.appendChild(newPanel);
-            console.log(
-              "New panel added back and resizer re-initialized via mutation observer."
-            );
           }, 5000);
         }
       }, 5000);

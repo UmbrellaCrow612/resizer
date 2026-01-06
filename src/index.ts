@@ -24,27 +24,6 @@ export type ResizerOptions = {
 };
 
 /**
- * Get some basic default values for the handle styles
- * @param options The options passed
- * @returns Object with css field and it's value
- */
-const getDefaultHandleStyles = (
-  options: ResizerOptions
-): Record<string, string> => {
-  let styles: Record<string, string> = {};
-
-  if (options.direction === "horizontal") {
-    styles.width = "5px";
-    styles.cursor = "col-resize";
-  } else {
-    styles.height = "5px";
-    styles.cursor = "row-resize";
-  }
-
-  return styles;
-};
-
-/**
  * Used to create a resizer which when observin a element will add resize handles between elements and allow them to be
  * changed in either width or height
  */
@@ -83,19 +62,13 @@ export class Resizer {
     startPos: number;
     startPrevFlex: number;
     startNextFlex: number;
+    startPrevSize: number;
+    startNextSize: number;
   } | null = null;
 
   constructor(options: ResizerOptions) {
-    this._options.handleStyles = {
-      ...getDefaultHandleStyles(options),
-    };
     this._options = {
-      direction: options.direction,
-      handleStyles: {
-        ...options.handleStyles,
-      },
-      container: options.container,
-      minFlex: options.minFlex,
+      ...options,
     };
 
     if (!this._options.container) {
@@ -167,7 +140,6 @@ export class Resizer {
       this.handles.push(handle);
     }
 
-    // Reconnect observer after modifications
     this.observer.observe(container, {
       childList: true,
       subtree: false,
@@ -182,6 +154,7 @@ export class Resizer {
     handle.classList.add("resizer-handle");
     handle.style.flexShrink = "0";
     handle.style.backgroundColor = "#ccc";
+    handle.style.userSelect = "none";
 
     Object.entries(this._options.handleStyles).forEach(([key, value]) => {
       handle.style[key as any] = value;
@@ -210,6 +183,15 @@ export class Resizer {
     const prevFlex = parseFloat(prevElement.style.flex || "1");
     const nextFlex = parseFloat(nextElement.style.flex || "1");
 
+    const prevSize =
+      this._options.direction === "horizontal"
+        ? prevElement.offsetWidth
+        : prevElement.offsetHeight;
+    const nextSize =
+      this._options.direction === "horizontal"
+        ? nextElement.offsetWidth
+        : nextElement.offsetHeight;
+
     this.activeResize = {
       handle,
       prevElement,
@@ -218,7 +200,13 @@ export class Resizer {
         this._options.direction === "horizontal" ? e.clientX : e.clientY,
       startPrevFlex: prevFlex,
       startNextFlex: nextFlex,
+      startPrevSize: prevSize,
+      startNextSize: nextSize,
     };
+
+    document.body.style.userSelect = "none";
+    document.body.style.cursor =
+      this._options.direction === "horizontal" ? "col-resize" : "row-resize";
 
     document.addEventListener("mousemove", this.onMouseMove);
     document.addEventListener("mouseup", this.onMouseUp);
@@ -234,32 +222,29 @@ export class Resizer {
       this._options.direction === "horizontal" ? e.clientX : e.clientY;
     const delta = currentPos - this.activeResize.startPos;
 
-    const containerSize =
-      this._options.direction === "horizontal"
-        ? this._options.container.clientWidth
-        : this._options.container.clientHeight;
+    // Calculate new sizes in pixels
+    const newPrevSize = this.activeResize.startPrevSize + delta;
+    const newNextSize = this.activeResize.startNextSize - delta;
 
-    // Calculate flex change as a proportion
-    const flexChange = (delta / containerSize) * 2;
+    // Calculate total flex and total size
+    const totalFlex =
+      this.activeResize.startPrevFlex + this.activeResize.startNextFlex;
+    const totalSize =
+      this.activeResize.startPrevSize + this.activeResize.startNextSize;
 
-    let newPrevFlex = this.activeResize.startPrevFlex + flexChange;
-    let newNextFlex = this.activeResize.startNextFlex - flexChange;
+    // Convert pixel sizes to flex values
+    let newPrevFlex = (newPrevSize / totalSize) * totalFlex;
+    let newNextFlex = (newNextSize / totalSize) * totalFlex;
 
     // Enforce minimum flex values
     if (newPrevFlex < this._options.minFlex) {
       newPrevFlex = this._options.minFlex;
-      newNextFlex =
-        this.activeResize.startPrevFlex +
-        this.activeResize.startNextFlex -
-        this._options.minFlex;
+      newNextFlex = totalFlex - this._options.minFlex;
     }
 
     if (newNextFlex < this._options.minFlex) {
       newNextFlex = this._options.minFlex;
-      newPrevFlex =
-        this.activeResize.startPrevFlex +
-        this.activeResize.startNextFlex -
-        this._options.minFlex;
+      newPrevFlex = totalFlex - this._options.minFlex;
     }
 
     // Apply new flex values
@@ -277,6 +262,11 @@ export class Resizer {
     if (!this.activeResize) return;
 
     this.activeResize = null;
+
+    // Restore default cursor and text selection
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
+
     document.removeEventListener("mousemove", this.onMouseMove);
     document.removeEventListener("mouseup", this.onMouseUp);
   }
@@ -326,5 +316,8 @@ export class Resizer {
     this.cleanupHandles();
     document.removeEventListener("mousemove", this.onMouseMove);
     document.removeEventListener("mouseup", this.onMouseUp);
+
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
   }
 }

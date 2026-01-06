@@ -74,22 +74,33 @@
 
       setTimeout(() => {
         // Horizontal
-        new Resizer({
+        let hor = new Resizer({
           direction: "horizontal",
           container: document.getElementById("horizontal"),
           minFlex: 0.3,
           handleStyles: {
             width: "5px",
-            backgroundColor: "black"
+            backgroundColor: "black",
           },
         });
 
+        hor.on(() => {
+          console.log("Hororzontal");
+        });
+
         // Vertical
-        new Resizer({
+        let vert = new Resizer({
           direction: "vertical",
           container: document.getElementById("vertical"),
           minFlex: 0.2,
-          handleStyles: {},
+          handleStyles: {
+            height: "5px",
+            backgroundColor: "black",
+          },
+        });
+
+        vert.on(() => {
+          console.log("vert");
         });
 
         // Add panel after 3 seconds

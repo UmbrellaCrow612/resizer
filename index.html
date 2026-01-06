@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resizer Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+
+      h2 {
+        margin: 20px 0 10px 0;
+      }
+
+      .container {
+        background: white;
+        border: 2px solid #ddd;
+        height: 300px;
+        margin-bottom: 40px;
+      }
+
+      .panel {
+        padding: 20px;
+        background: #667eea;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+      }
+
+      .panel:nth-child(2) {
+        background: #f093fb;
+      }
+
+      .panel:nth-child(3) {
+        background: #4facfe;
+      }
+
+      .panel:nth-child(4) {
+        background: #43e97b;
+      }
+
+      .resizer-handle {
+        background: #888 !important;
+      }
+
+      .resizer-handle:hover {
+        background: #555 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Resizer Demo</h1>
+
+    <h2>Horizontal</h2>
+    <div id="horizontal" class="container">
+      <div class="panel">Panel 1</div>
+      <div class="panel">Panel 2</div>
+      <div class="panel">Panel 3</div>
+    </div>
+
+    <h2>Vertical</h2>
+    <div id="vertical" class="container">
+      <div class="panel">Panel A</div>
+      <div class="panel">Panel B</div>
+    </div>
+
+    <script type="module">
+      import { Resizer } from "./dist/index.js";
+
+      setTimeout(() => {
+        // Horizontal
+        new Resizer({
+          direction: "horizontal",
+          container: document.getElementById("horizontal"),
+          minFlex: 0.3,
+          handleStyles: {
+            width: "5px",
+            backgroundColor: "black"
+          },
+        });
+
+        // Vertical
+        new Resizer({
+          direction: "vertical",
+          container: document.getElementById("vertical"),
+          minFlex: 0.2,
+          handleStyles: {},
+        });
+
+        // Add panel after 3 seconds
+        setTimeout(() => {
+          const panel = document.createElement("div");
+          panel.className = "panel";
+          panel.textContent = "Panel 4";
+          document.getElementById("horizontal").appendChild(panel);
+        }, 3000);
+
+        // Remove panel after 6 seconds
+        setTimeout(() => {
+          const container = document.getElementById("vertical");
+          const panels = Array.from(container.children).filter((child) =>
+            child.classList.contains("panel")
+          );
+          if (panels.length > 0) {
+            panels[panels.length - 1].remove();
+          }
+        }, 6000);
+      }, 400);
+    </script>
+  </body>
+</html>

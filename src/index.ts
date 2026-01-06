@@ -1,5 +1,5 @@
 /**
- * Shape of the children it holds and there flex values
+ * Shape of the children it holds and their flex values
  */
 export type ResizerTwoChildrenFlex = {
   /**
@@ -8,13 +8,13 @@ export type ResizerTwoChildrenFlex = {
   firstChild: number;
 
   /**
-   * The flex value of the secodn child
+   * The flex value of the second child
    */
   secondChild: number;
 };
 
 /**
- * Options to change the behvaiour
+ * Options to change the behavior
  */
 export type ResizerTwoOptions = {
   /**
@@ -23,12 +23,12 @@ export type ResizerTwoOptions = {
   minFlex: ResizerTwoChildrenFlex;
 
   /**
-   * Optional values to set inital flex values for the children
+   * Optional values to set initial flex values for the children
    */
   initalFlex: ResizerTwoChildrenFlex | undefined;
 
   /**
-   * Key value pairs of css properties and there values
+   * Key-value pairs of CSS properties and their values
    */
   handleStyles: Record<string, string>;
 
@@ -38,14 +38,14 @@ export type ResizerTwoOptions = {
   container: HTMLDivElement;
 
   /**
-   * The direction to make the children either row based or column based
+   * The direction to make the children either row-based or column-based
    */
   direction: "vertical" | "horizontal";
 };
 
 /**
- * Simple resizer that listens to a specific container and if elemnents or removed or added when the count is equal to two then
- * a handle is added between the two elements to change there size like a panel
+ * Simple resizer that listens to a specific container; if elements are removed or added, and the count is equal to two, then
+ * a handle is added between the two elements to change their size like a panel.
  */
 export class ResizerTwo {
   private _options: ResizerTwoOptions;
@@ -78,7 +78,7 @@ export class ResizerTwo {
     if (!container) throw new Error("Container element not passed");
 
     if (container.children.length == 2) {
-      // add handle beofre lsitenign if we can
+      // Add handle before listening if we can
       this.addHandle();
     }
 
@@ -93,9 +93,9 @@ export class ResizerTwo {
   }
 
   /**
-   * Get the value of a css variable
-   * @param varName The css var name for example `--bg-primary`
-   * @param element The HTML element default to document
+   * Get the value of a CSS variable
+   * @param varName The CSS var name, for example `--bg-primary`
+   * @param element The HTML element, defaults to document
    * @returns Value of it
    */
   private getCssVar(varName: string, element = document.documentElement) {
@@ -103,7 +103,7 @@ export class ResizerTwo {
   }
 
   /**
-   * Adds the handles and applys styles to the container
+   * Adds the handles and applies styles to the container
    */
   private addHandle() {
     let container = this._options.container;
@@ -169,7 +169,7 @@ export class ResizerTwo {
   }
 
   /**
-   * Checks if a string is a css var just checks if it has `--`
+   * Checks if a string is a CSS var (checks if it contains `--`)
    * @param str The string to check
    * @returns True or false
    */
@@ -178,7 +178,7 @@ export class ResizerTwo {
   }
 
   /**
-   * Ads the styles to the container
+   * Adds the styles to the container
    */
   private addContainerStyles() {
     let container = this._options.container;
@@ -290,7 +290,7 @@ export class ResizerTwo {
   }
 
   /**
-   * Remove the handle element and any styles to the container
+   * Removes the handle element and any styles from the container
    */
   private removeHandle() {
     let container = this._options.container;
@@ -305,7 +305,7 @@ export class ResizerTwo {
   }
 
   /**
-   * Runs every time a element is added or removed
+   * Runs every time an element is added or removed
    */
   private onMutation() {
     let container = this._options.container;
@@ -316,15 +316,15 @@ export class ResizerTwo {
       container.contains(this._handle) &&
       container.children.length === 3
     ) {
-      return; // if it has two children and handle it's fine we dont need to do anything
+      return; // If it has two children and a handle, it's fine; we don't need to do anything
     }
 
     if (!this._handle && container.children.length === 2) {
-      this.addHandle(); // if there isnt a handle and two elements add it
+      this.addHandle(); // If there isn't a handle and there are two elements, add it
       return;
     }
 
-    // else it has more or else children needed so we ignore
+    // Else it has more or fewer children than needed, so we ignore
 
     this.removeHandle();
     this.removeContainerStyles();
@@ -332,14 +332,14 @@ export class ResizerTwo {
 
   /**
    * Gets the flex value of the two children
-   * @returns Object contaning there values
+   * @returns Object containing their values
    */
   getFlexValues(): ResizerTwoChildrenFlex {
     return this._currentChildrenFlexValues;
   }
 
   /**
-   * Run logic when the handle rezies the elements
+   * Run logic when the handle resizes the elements
    * @param callback The logic to run when it changes
    */
   on(callback: () => void) {

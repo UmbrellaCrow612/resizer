@@ -121,7 +121,7 @@ export class ResizerTwo {
 
       container.insertBefore(this._handle, secondChild);
 
-      // add listners
+      this.addHandleListeners();
     }
   }
 
@@ -198,6 +198,84 @@ export class ResizerTwo {
 
     container.style.removeProperty("display");
     container.style.removeProperty("direction");
+  }
+
+  /**
+   * Adds listeners to the handle for resizing logic
+   */
+  private addHandleListeners() {
+    if (!this._handle) throw new Error("No handle element");
+
+    const container = this._options.container;
+    if (!container) throw new Error("Container element not passed");
+
+    const firstChild = container.children[0] as HTMLElement;
+    const secondChild = container.children[1] as HTMLElement;
+
+    let startPos = 0;
+    let startFirstFlex = this._currentChildrenFlexValues.firstChild;
+    let startSecondFlex = this._currentChildrenFlexValues.secondChild;
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!firstChild || !secondChild) return;
+
+      const totalFlex = startFirstFlex + startSecondFlex;
+
+      let delta: number;
+      if (this._options.direction === "horizontal") {
+        delta = e.clientX - startPos;
+        const containerWidth = container.clientWidth;
+        const flexDelta = (delta / containerWidth) * totalFlex;
+        let newFirst = startFirstFlex + flexDelta;
+        let newSecond = startSecondFlex - flexDelta;
+
+        // respect minFlex
+        newFirst = Math.max(newFirst, this._options.minFlex.firstChild);
+        newSecond = Math.max(newSecond, this._options.minFlex.secondChild);
+
+        firstChild.style.flex = `${newFirst}`;
+        secondChild.style.flex = `${newSecond}`;
+
+        this._currentChildrenFlexValues.firstChild = newFirst;
+        this._currentChildrenFlexValues.secondChild = newSecond;
+      } else {
+        delta = e.clientY - startPos;
+        const containerHeight = container.clientHeight;
+        const flexDelta = (delta / containerHeight) * totalFlex;
+        let newFirst = startFirstFlex + flexDelta;
+        let newSecond = startSecondFlex - flexDelta;
+
+        // respect minFlex
+        newFirst = Math.max(newFirst, this._options.minFlex.firstChild);
+        newSecond = Math.max(newSecond, this._options.minFlex.secondChild);
+
+        firstChild.style.flex = `${newFirst}`;
+        secondChild.style.flex = `${newSecond}`;
+
+        this._currentChildrenFlexValues.firstChild = newFirst;
+        this._currentChildrenFlexValues.secondChild = newSecond;
+      }
+
+      this._callbacks.forEach((cb) => cb());
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+
+    const onMouseDown = (e: MouseEvent) => {
+      e.preventDefault();
+      startPos =
+        this._options.direction === "horizontal" ? e.clientX : e.clientY;
+      startFirstFlex = this._currentChildrenFlexValues.firstChild;
+      startSecondFlex = this._currentChildrenFlexValues.secondChild;
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    };
+
+    this._handle.addEventListener("mousedown", onMouseDown);
   }
 
   /**

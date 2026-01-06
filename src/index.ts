@@ -358,6 +358,7 @@ export class ResizerTwo {
    * Runs cleanup logic
    */
   dispose() {
+    this._mutationObserver.disconnect()
     this.removeContainerStyles();
     this.removeHandle();
     this._callbacks.clear();

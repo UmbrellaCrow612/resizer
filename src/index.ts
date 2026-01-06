@@ -1,5 +1,5 @@
 /**
- * Shape of the cildren it holds and there flex values
+ * Shape of the children it holds and there flex values
  */
 export type ResizerTwoChildrenFlex = {
   /**
@@ -132,15 +132,18 @@ export class ResizerTwo {
     const container = this._options.container;
     if (!container) throw new Error("Container element not passed");
 
-    if (container.children.length < 2) {
-      throw new Error("Container must have at least two children");
+    const panels = Array.from(container.children).filter(
+      (child) => child !== this._handle
+    ) as HTMLElement[];
+
+    if (panels.length !== 2) {
+      throw new Error(
+        "Container must have exactly two panels (excluding handle)"
+      );
     }
 
-    const firstChild = container.children[0] as HTMLElement;
-    const secondChild = container.children[1] as HTMLElement;
-
-    firstChild.style.flex = `${this._currentChildrenFlexValues.firstChild}`;
-    secondChild.style.flex = `${this._currentChildrenFlexValues.secondChild}`;
+    panels[0].style.flex = `${this._currentChildrenFlexValues.firstChild} 1 0`;
+    panels[1].style.flex = `${this._currentChildrenFlexValues.secondChild} 1 0`;
   }
 
   /**
@@ -213,7 +216,7 @@ export class ResizerTwo {
     if (!container) throw new Error("Container element not passed");
 
     const firstChild = container.children[0] as HTMLElement;
-    const secondChild = container.children[1] as HTMLElement;
+    const secondChild = container.children[2] as HTMLElement;
 
     let startPos = 0;
     let startFirstFlex = this._currentChildrenFlexValues.firstChild;
@@ -350,5 +353,9 @@ export class ResizerTwo {
   /**
    * Runs cleanup logic
    */
-  dispose() {}
+  dispose() {
+    this.removeContainerStyles();
+    this.removeHandle();
+    this._callbacks.clear();
+  }
 }

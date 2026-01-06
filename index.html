@@ -1,67 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ResizerTwo Demo</title>
-  <style>
-    body, html {
-      height: 100%;
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ResizerTwo Demo</title>
+    <style>
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
 
-    #container {
-      height: 100%;
-      width: 100%;
-      border: 1px solid #ccc;
-    }
+      #container {
+        height: 100%;
+        width: 100%;
+        border: 1px solid #ccc;
+      }
 
-    .panel {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #f0f0f0;
-      border: 1px solid #aaa;
-      min-height: 50px;
-      min-width: 50px;
-      overflow: hidden;
-    }
+      .panel {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f0f0f0;
+        border: 1px solid #aaa;
+        min-height: 50px;
+        min-width: 50px;
+        overflow: hidden;
+      }
 
-    /* Default handle styles (optional fallback) */
-    .handle {
-      background-color: #888;
-      width: 5px;
-      cursor: col-resize;
-    }
-  </style>
-</head>
-<body>
-  <div id="container">
-    <div class="panel">Panel 1</div>
-    <div class="panel">Panel 2</div>
-  </div>
+      /* Default handle styles (optional fallback) */
+      .handle {
+        background-color: #888;
+        width: 5px;
+        cursor: col-resize;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div class="panel">Panel 1</div>
+      <div class="panel">Panel 2</div>
+    </div>
 
-  <script type="module">
-    import { ResizerTwo } from './dist/index.js';
+    <script type="module">
+      import { ResizerTwo } from "./dist/index.js";
 
-    const container = document.getElementById('container');
+      const container = document.getElementById("container");
+      const STORAGE_KEY = "resizer_flex_values";
 
-    const resizer = new ResizerTwo({
-      container: container,
-      direction: 'horizontal', // or 'vertical'
-      minFlex: { firstChild: 0.1, secondChild: 0.1 },
-      handleStyles: {
-        width: '5px',
-        backgroundColor: '#555',
-        cursor: 'col-resize'
-      },
-      initalFlex: { firstChild: 1, secondChild: 1 }
-    });
+      let savedFlex = { firstChild: 1, secondChild: 1 };
+      const rawData = localStorage.getItem(STORAGE_KEY);
 
-    resizer.on(() => {
-      console.log('Panels resized:', resizer.getFlexValues());
-    });
-  </script>
-</body>
+      if (rawData) {
+        try {
+          savedFlex = JSON.parse(rawData);
+        } catch (e) {
+          console.error("Failed to parse saved flex values", e);
+        }
+      }
+
+      const resizer = new ResizerTwo({
+        container: container,
+        direction: "horizontal",
+        minFlex: { firstChild: 0.1, secondChild: 0.1 },
+        handleStyles: {
+          width: "5px",
+          backgroundColor: "#555",
+          cursor: "col-resize",
+        },
+        initalFlex: savedFlex, 
+      });
+
+      resizer.on(() => {
+        const currentValues = resizer.getFlexValues();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentValues));
+      });
+
+      // Your existing dynamic panel logic
+      setTimeout(() => {
+        const panels = container.querySelectorAll(".panel");
+        if (panels.length >= 2) {
+          panels[1].remove();
+          console.log("Panel 2 removed.");
+
+          setTimeout(() => {
+            const newPanel = document.createElement("div");
+            newPanel.className = "panel";
+            newPanel.textContent = "New Panel 2";
+            container.appendChild(newPanel);
+            console.log(
+              "New panel added back and resizer re-initialized via mutation observer."
+            );
+          }, 5000);
+        }
+      }, 5000);
+    </script>
+  </body>
 </html>

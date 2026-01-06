@@ -147,6 +147,22 @@ export class ResizerTwo {
   }
 
   /**
+   * Removes the custom styles added to the children
+   */
+  private removeChildrenStyles() {
+    const container = this._options.container;
+    if (!container) throw new Error("Container element not passed");
+
+    const panels = Array.from(container.children).filter(
+      (child) => child !== this._handle
+    ) as HTMLElement[];
+
+    panels.forEach((x) => {
+      x.style.removeProperty("flex");
+    });
+  }
+
+  /**
    * Adds the styles to the handle
    */
   private addHandleStyles() {
@@ -328,6 +344,7 @@ export class ResizerTwo {
 
     this.removeHandle();
     this.removeContainerStyles();
+    this.removeChildrenStyles();
   }
 
   /**
@@ -358,9 +375,12 @@ export class ResizerTwo {
    * Runs cleanup logic
    */
   dispose() {
-    this._mutationObserver.disconnect()
+    this._mutationObserver.disconnect();
+
     this.removeContainerStyles();
     this.removeHandle();
+    this.removeChildrenStyles();
+
     this._callbacks.clear();
   }
 }

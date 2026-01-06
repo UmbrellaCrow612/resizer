@@ -1,5 +1,15 @@
+/**
+ * Shape of the cildren it holds and there flex values
+ */
 export type ResizerTwoChildrenFlex = {
+  /**
+   * The flex value of the first child
+   */
   firstChild: number;
+
+  /**
+   * The flex value of the secodn child
+   */
   secondChild: number;
 };
 
@@ -26,6 +36,11 @@ export type ResizerTwoOptions = {
    * The parent element that contains the elements we want to add resize to
    */
   container: HTMLDivElement;
+
+  /**
+   * The direction to make the children either row based or column based
+   */
+  direction: "vertical" | "horizontal";
 };
 
 /**
@@ -46,6 +61,10 @@ export class ResizerTwo {
   private _options: ResizerTwoOptions;
   private _callbacks: Set<() => void> = new Set();
   private _mutationObserver = new MutationObserver(() => this.onMutation());
+  private _currentChildrenFlexValues: ResizerTwoChildrenFlex = {
+    firstChild: 0,
+    secondChild: 0,
+  };
 
   constructor(options: ResizerTwoOptions) {
     this._options = options;
@@ -66,7 +85,7 @@ export class ResizerTwo {
    * @returns Object contaning there values
    */
   getFlexValues(): ResizerTwoChildrenFlex {
-    return { firstChild: 0, secondChild: 0 };
+    return this._currentChildrenFlexValues;
   }
 
   /**

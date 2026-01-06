@@ -65,6 +65,7 @@ export class ResizerTwo {
     firstChild: 0,
     secondChild: 0,
   };
+  private _handle: HTMLDivElement | undefined = undefined;
 
   constructor(options: ResizerTwoOptions) {
     this._options = options;
@@ -73,12 +74,66 @@ export class ResizerTwo {
       throw new Error("Container element not passed");
     }
 
+    if (options.initalFlex) {
+      this._currentChildrenFlexValues = {
+        ...options.initalFlex,
+      };
+    }
+
     this.init();
   }
 
-  private init() {}
+  private init() {
+    let container = this._options.container;
+    if (!container) throw new Error("Container element not passed");
 
-  private onMutation() {}
+    if (container.children.length == 2) { // add handle beofre lsitenign if we can
+      this.addHandle();
+    }
+
+    this._mutationObserver.observe(container, {
+      childList: true,
+      subtree: false,
+      attributes: false,
+      attributeOldValue: false,
+      characterData: false,
+      characterDataOldValue: false,
+    });
+  }
+
+  private addHandle() {
+    let container = this._options.container;
+    if (!container) throw new Error("Container element not passed");
+
+    if (container.children.length == 2) {
+      this._handle = document.createElement("div");
+
+      let secondChild = container.children[1];
+      if (!secondChild) throw new Error("No two children");
+
+      container.insertBefore(this._handle, secondChild);
+    }
+  }
+
+  /**
+   * Remove the handle element
+   */
+  private removeHandle() {
+    let container = this._options.container;
+    if (!container) throw new Error("Container element not passed");
+
+    if (this._handle) {
+      container.removeChild(this._handle);
+    }
+  }
+
+  /**
+   * Runs every time a element i added or removed
+   */
+  private onMutation() {
+    let container = this._options.container;
+    if (!container) throw new Error("Container element not passed");
+  }
 
   /**
    * Gets the flex value of the two children

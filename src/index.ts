@@ -2,322 +2,240 @@
  * Options to change the behaviour of the resizer
  */
 export type ResizerOptions = {
-  /**
-   * Which direction the elements will be places i.e column based or row based this dictaes which direction the user can move the handle
-   */
   direction: "horizontal" | "vertical";
-
-  /**
-   * Styles you want to apply to the handle
-   */
   handleStyles: Record<string, string>;
-
-  /**
-   * The parent container that the resizer will watch and add handles between elements
-   */
   container: HTMLDivElement | undefined;
-
-  /**
-   * How small a element can be shrun using the handles
-   */
   minFlex: number;
 };
 
-/**
- * Used to create a resizer which when observin a element will add resize handles between elements and allow them to be
- * changed in either width or height
- */
 export class Resizer {
-  private _options: ResizerOptions = {
-    direction: "horizontal",
-    handleStyles: {},
-    container: undefined,
-    minFlex: 0.3,
-  };
-
-  /**
-   * Callbacks functions to run when the panel has been resized
-   */
+  private _options: ResizerOptions;
   private readonly _callbacks: Set<() => void> = new Set();
-
-  /**
-   * Used to listen to the container element and run logic when it changes
-   */
-  private observer: MutationObserver = new MutationObserver(() =>
-    this.onMutation()
-  );
-
-  /**
-   * Store references to handles for cleanup
-   */
+  private observer: MutationObserver;
   private handles: HTMLDivElement[] = [];
 
-  /**
-   * Track active resize state
-   */
   private activeResize: {
-    handle: HTMLDivElement;
-    prevElement: HTMLElement;
-    nextElement: HTMLElement;
+    handleIndex: number;
+    initialFlexes: number[];
+    totalFlex: number;
+    totalContainerSize: number;
     startPos: number;
-    startPrevFlex: number;
-    startNextFlex: number;
-    startPrevSize: number;
-    startNextSize: number;
   } | null = null;
 
   constructor(options: ResizerOptions) {
-    this._options = {
-      ...options,
-    };
+    this._options = { ...options };
 
     if (!this._options.container) {
       throw new Error("Failed to pass a container to watch");
     }
 
+    this.observer = new MutationObserver(() => this.onMutation());
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
+
     this.init();
   }
 
-  /**
-   * Begins to watch the container and adds handles between elements
-   */
   private init() {
-    let container = this._options.container;
-    if (!container) {
-      throw new Error("Failed to pass a container to watch");
-    }
-
+    const container = this._options.container!;
     container.style.display = "flex";
     container.style.flexDirection =
       this._options.direction === "horizontal" ? "row" : "column";
 
-    this.observer.observe(container, {
-      childList: true,
-      subtree: false,
-    });
-
     this.setupHandles();
-
-    this.onMouseMove = this.onMouseMove.bind(this);
-    this.onMouseUp = this.onMouseUp.bind(this);
   }
 
   /**
-   * Set up handles between all child elements
+   * Recalculates flex distribution and recreates handles
    */
   private setupHandles() {
     const container = this._options.container;
     if (!container) return;
 
     this.observer.disconnect();
-
     this.cleanupHandles();
 
     const children = Array.from(container.children).filter(
       (child) => !child.classList.contains("resizer-handle")
     ) as HTMLElement[];
 
-    if (children.length < 2) {
-      // Reconnect observer before returning
-      this.observer.observe(container, {
-        childList: true,
-        subtree: false,
-      });
+    if (children.length === 0) {
+      this.reobserve();
       return;
     }
 
+    let totalExistingFlex = 0;
+    let existingFlexCount = 0;
+
     children.forEach((child) => {
-      if (!child.style.flex) {
-        child.style.flex = "1";
+      const f = parseFloat(child.style.flex);
+      if (!isNaN(f)) {
+        totalExistingFlex += f;
+        existingFlexCount++;
       }
     });
 
+    // 2. Assign flex to new elements (average of existing, or 1)
+    const averageFlex = existingFlexCount > 0 ? totalExistingFlex / existingFlexCount : 1;
+    
+    children.forEach((child) => {
+      if (!child.style.flex || isNaN(parseFloat(child.style.flex))) {
+        child.style.flex = String(averageFlex);
+      }
+    });
+
+    // 3. Normalize: Make the sum of flex equal to the number of children
+    // This ensures that "1" always represents the "standard" size
+    const newTotalFlex = children.reduce((sum, child) => sum + parseFloat(child.style.flex), 0);
+    const normalizationFactor = children.length / newTotalFlex;
+
+    children.forEach((child) => {
+      const currentFlex = parseFloat(child.style.flex);
+      const normalizedFlex = currentFlex * normalizationFactor;
+      // Enforce minFlex even during normalization
+      child.style.flex = String(Math.max(normalizedFlex, this._options.minFlex));
+    });
+
+    // 4. Create handles between children
     for (let i = 0; i < children.length - 1; i++) {
       const handle = this.createHandle();
       const nextChild = children[i + 1];
-
       container.insertBefore(handle, nextChild);
       this.handles.push(handle);
     }
 
-    this.observer.observe(container, {
-      childList: true,
-      subtree: false,
-    });
+    this.reobserve();
   }
 
-  /**
-   * Create a resize handle element
-   */
   private createHandle(): HTMLDivElement {
     const handle = document.createElement("div");
     handle.classList.add("resizer-handle");
     handle.style.flexShrink = "0";
     handle.style.backgroundColor = "#ccc";
     handle.style.userSelect = "none";
+    handle.style.cursor = this._options.direction === "horizontal" ? "col-resize" : "row-resize";
+
+    if (this._options.direction === "horizontal") {
+      handle.style.width = "4px";
+    } else {
+      handle.style.height = "4px";
+    }
 
     Object.entries(this._options.handleStyles).forEach(([key, value]) => {
       handle.style[key as any] = value;
     });
 
     handle.addEventListener("mousedown", (e) => this.onMouseDown(e, handle));
-
     return handle;
   }
 
-  /**
-   * Handle mouse down on a handle
-   */
   private onMouseDown(e: MouseEvent, handle: HTMLDivElement) {
     e.preventDefault();
-
     const container = this._options.container;
     if (!container) return;
 
-    const handleIndex = Array.from(container.children).indexOf(handle);
-    const prevElement = container.children[handleIndex - 1] as HTMLElement;
-    const nextElement = container.children[handleIndex + 1] as HTMLElement;
+    const children = Array.from(container.children) as HTMLElement[];
+    const handleIndex = children.indexOf(handle);
 
-    if (!prevElement || !nextElement) return;
+    const initialFlexes = children.map((child) =>
+      child.classList.contains("resizer-handle") ? 0 : parseFloat(child.style.flex || "1")
+    );
 
-    const prevFlex = parseFloat(prevElement.style.flex || "1");
-    const nextFlex = parseFloat(nextElement.style.flex || "1");
-
-    const prevSize =
-      this._options.direction === "horizontal"
-        ? prevElement.offsetWidth
-        : prevElement.offsetHeight;
-    const nextSize =
-      this._options.direction === "horizontal"
-        ? nextElement.offsetWidth
-        : nextElement.offsetHeight;
+    const totalFlex = initialFlexes.reduce((a, b) => a + b, 0);
+    const totalContainerSize = this._options.direction === "horizontal" 
+      ? container.offsetWidth 
+      : container.offsetHeight;
 
     this.activeResize = {
-      handle,
-      prevElement,
-      nextElement,
-      startPos:
-        this._options.direction === "horizontal" ? e.clientX : e.clientY,
-      startPrevFlex: prevFlex,
-      startNextFlex: nextFlex,
-      startPrevSize: prevSize,
-      startNextSize: nextSize,
+      handleIndex,
+      initialFlexes,
+      totalFlex,
+      totalContainerSize,
+      startPos: this._options.direction === "horizontal" ? e.clientX : e.clientY,
     };
 
     document.body.style.userSelect = "none";
-    document.body.style.cursor =
-      this._options.direction === "horizontal" ? "col-resize" : "row-resize";
-
+    document.body.style.cursor = this._options.direction === "horizontal" ? "col-resize" : "row-resize";
     document.addEventListener("mousemove", this.onMouseMove);
     document.addEventListener("mouseup", this.onMouseUp);
   }
 
-  /**
-   * Handle mouse move during resize
-   */
   private onMouseMove(e: MouseEvent) {
     if (!this.activeResize || !this._options.container) return;
 
-    const currentPos =
-      this._options.direction === "horizontal" ? e.clientX : e.clientY;
-    const delta = currentPos - this.activeResize.startPos;
+    const { handleIndex, initialFlexes, totalFlex, totalContainerSize, startPos } = this.activeResize;
+    const currentPos = this._options.direction === "horizontal" ? e.clientX : e.clientY;
+    const deltaPx = currentPos - startPos;
+    const deltaFlex = (deltaPx / totalContainerSize) * totalFlex;
 
-    // Calculate new sizes in pixels
-    const newPrevSize = this.activeResize.startPrevSize + delta;
-    const newNextSize = this.activeResize.startNextSize - delta;
+    const children = Array.from(this._options.container.children) as HTMLElement[];
+    const newFlexes = [...initialFlexes];
 
-    // Calculate total flex and total size
-    const totalFlex =
-      this.activeResize.startPrevFlex + this.activeResize.startNextFlex;
-    const totalSize =
-      this.activeResize.startPrevSize + this.activeResize.startNextSize;
-
-    // Convert pixel sizes to flex values
-    let newPrevFlex = (newPrevSize / totalSize) * totalFlex;
-    let newNextFlex = (newNextSize / totalSize) * totalFlex;
-
-    // Enforce minimum flex values
-    if (newPrevFlex < this._options.minFlex) {
-      newPrevFlex = this._options.minFlex;
-      newNextFlex = totalFlex - this._options.minFlex;
+    if (deltaFlex > 0) {
+      let remainingDelta = deltaFlex;
+      for (let i = handleIndex + 1; i < newFlexes.length; i++) {
+        if (children[i].classList.contains("resizer-handle")) continue;
+        const shrinkable = newFlexes[i] - this._options.minFlex;
+        const shrinkAmount = Math.min(remainingDelta, Math.max(0, shrinkable));
+        newFlexes[i] -= shrinkAmount;
+        remainingDelta -= shrinkAmount;
+      }
+      const actualShrinked = deltaFlex - remainingDelta;
+      newFlexes[handleIndex - 1] += actualShrinked;
+    } else if (deltaFlex < 0) {
+      let remainingDelta = Math.abs(deltaFlex);
+      for (let i = handleIndex - 1; i >= 0; i--) {
+        if (children[i].classList.contains("resizer-handle")) continue;
+        const shrinkable = newFlexes[i] - this._options.minFlex;
+        const shrinkAmount = Math.min(remainingDelta, Math.max(0, shrinkable));
+        newFlexes[i] -= shrinkAmount;
+        remainingDelta -= shrinkAmount;
+      }
+      const actualShrinked = Math.abs(deltaFlex) - remainingDelta;
+      newFlexes[handleIndex + 1] += actualShrinked;
     }
 
-    if (newNextFlex < this._options.minFlex) {
-      newNextFlex = this._options.minFlex;
-      newPrevFlex = totalFlex - this._options.minFlex;
-    }
+    newFlexes.forEach((flex, idx) => {
+      if (!children[idx].classList.contains("resizer-handle")) {
+        children[idx].style.flex = String(flex);
+      }
+    });
 
-    // Apply new flex values
-    this.activeResize.prevElement.style.flex = String(newPrevFlex);
-    this.activeResize.nextElement.style.flex = String(newNextFlex);
-
-    // Trigger callbacks
     this._callbacks.forEach((cb) => cb());
   }
 
-  /**
-   * Handle mouse up to end resize
-   */
   private onMouseUp() {
-    if (!this.activeResize) return;
-
     this.activeResize = null;
-
-    // Restore default cursor and text selection
     document.body.style.userSelect = "";
     document.body.style.cursor = "";
-
     document.removeEventListener("mousemove", this.onMouseMove);
     document.removeEventListener("mouseup", this.onMouseUp);
   }
 
-  /**
-   * Clean up existing handles
-   */
+  private reobserve() {
+    if (this._options.container) {
+      this.observer.observe(this._options.container, {
+        childList: true,
+        subtree: false,
+      });
+    }
+  }
+
   private cleanupHandles() {
-    this.handles.forEach((handle) => {
-      handle.removeEventListener("mousedown", (e) =>
-        this.onMouseDown(e, handle)
-      );
-      handle.remove();
-    });
+    this.handles.forEach((handle) => handle.remove());
     this.handles = [];
   }
 
-  /**
-   * Runs logic when the container is mutated
-   */
   private onMutation = () => {
-    // Re-setup handles when children change
     this.setupHandles();
   };
 
-  /**
-   * Register a callback to run when a user is moving the handle i.e resizing
-   * @param callback The logic to run
-   */
-  on(callback: () => void) {
-    this._callbacks.add(callback);
-  }
+  on(callback: () => void) { this._callbacks.add(callback); }
+  remove(callback: () => void) { this._callbacks.delete(callback); }
 
-  /**
-   * Remove a callback you registered
-   * @param callback The callback to remove
-   */
-  remove(callback: () => void) {
-    this._callbacks.delete(callback);
-  }
-
-  /**
-   * Clean up and disconnect observer
-   */
   destroy() {
     this.observer.disconnect();
     this.cleanupHandles();
-    document.removeEventListener("mousemove", this.onMouseMove);
-    document.removeEventListener("mouseup", this.onMouseUp);
-
-    document.body.style.userSelect = "";
-    document.body.style.cursor = "";
+    this.onMouseUp();
   }
 }

@@ -155,7 +155,7 @@ export class ResizerTwo {
     for (const [property, value] of Object.entries(
       this._options.handleStyles
     )) {
-      let computed = "";
+      let computed = value;
 
       if (this.isCssVariable(value)) {
         computed = this.getCssVar(value);
@@ -192,6 +192,9 @@ export class ResizerTwo {
     }
   }
 
+  /**
+   * Removes the styles we added to the parent container
+   */
   private removeContainerStyles() {
     let container = this._options.container;
     if (!container) throw new Error("Container element not passed");
@@ -222,39 +225,42 @@ export class ResizerTwo {
       const totalFlex = startFirstFlex + startSecondFlex;
 
       let delta: number;
+      let containerSize: number;
+      let newFirst: number;
+      let newSecond: number;
+
       if (this._options.direction === "horizontal") {
         delta = e.clientX - startPos;
-        const containerWidth = container.clientWidth;
-        const flexDelta = (delta / containerWidth) * totalFlex;
-        let newFirst = startFirstFlex + flexDelta;
-        let newSecond = startSecondFlex - flexDelta;
-
-        // respect minFlex
-        newFirst = Math.max(newFirst, this._options.minFlex.firstChild);
-        newSecond = Math.max(newSecond, this._options.minFlex.secondChild);
-
-        firstChild.style.flex = `${newFirst}`;
-        secondChild.style.flex = `${newSecond}`;
-
-        this._currentChildrenFlexValues.firstChild = newFirst;
-        this._currentChildrenFlexValues.secondChild = newSecond;
+        containerSize = container.clientWidth;
       } else {
         delta = e.clientY - startPos;
-        const containerHeight = container.clientHeight;
-        const flexDelta = (delta / containerHeight) * totalFlex;
-        let newFirst = startFirstFlex + flexDelta;
-        let newSecond = startSecondFlex - flexDelta;
-
-        // respect minFlex
-        newFirst = Math.max(newFirst, this._options.minFlex.firstChild);
-        newSecond = Math.max(newSecond, this._options.minFlex.secondChild);
-
-        firstChild.style.flex = `${newFirst}`;
-        secondChild.style.flex = `${newSecond}`;
-
-        this._currentChildrenFlexValues.firstChild = newFirst;
-        this._currentChildrenFlexValues.secondChild = newSecond;
+        containerSize = container.clientHeight;
       }
+
+      // Avoid division by zero
+      if (containerSize === 0) return;
+
+      const flexDelta = (delta / containerSize) * totalFlex;
+
+      newFirst = Math.max(
+        startFirstFlex + flexDelta,
+        this._options.minFlex.firstChild
+      );
+      newSecond = Math.max(
+        startSecondFlex - flexDelta,
+        this._options.minFlex.secondChild
+      );
+
+      // Ensure total flex stays consistent
+      const adjustedTotal = newFirst + newSecond;
+      newFirst = (newFirst / adjustedTotal) * totalFlex;
+      newSecond = (newSecond / adjustedTotal) * totalFlex;
+
+      firstChild.style.flex = `${newFirst}`;
+      secondChild.style.flex = `${newSecond}`;
+
+      this._currentChildrenFlexValues.firstChild = newFirst;
+      this._currentChildrenFlexValues.secondChild = newSecond;
 
       this._callbacks.forEach((cb) => cb());
     };
@@ -268,6 +274,8 @@ export class ResizerTwo {
       e.preventDefault();
       startPos =
         this._options.direction === "horizontal" ? e.clientX : e.clientY;
+
+      // Always capture current flex values
       startFirstFlex = this._currentChildrenFlexValues.firstChild;
       startSecondFlex = this._currentChildrenFlexValues.secondChild;
 
@@ -294,7 +302,7 @@ export class ResizerTwo {
   }
 
   /**
-   * Runs every time a element i added or removed
+   * Runs every time a element is added or removed
    */
   private onMutation() {
     let container = this._options.container;
@@ -316,6 +324,7 @@ export class ResizerTwo {
     // else it has more or else children needed so we ignore
 
     this.removeHandle();
+    this.removeContainerStyles();
   }
 
   /**

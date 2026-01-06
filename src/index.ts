@@ -44,16 +44,6 @@ export type ResizerTwoOptions = {
 };
 
 /**
- * Get the value of a css variable
- * @param varName The css var name for example `--bg-primary`
- * @param element The HTML element default to document
- * @returns Value of it
- */
-function getCssVar(varName: string, element = document.documentElement) {
-  return getComputedStyle(element).getPropertyValue(varName).trim();
-}
-
-/**
  * Simple resizer that listens to a specific container and if elemnents or removed or added when the count is equal to two then
  * a handle is added between the two elements to change there size like a panel
  */
@@ -102,22 +92,107 @@ export class ResizerTwo {
     });
   }
 
+  /**
+   * Get the value of a css variable
+   * @param varName The css var name for example `--bg-primary`
+   * @param element The HTML element default to document
+   * @returns Value of it
+   */
+  private getCssVar(varName: string, element = document.documentElement) {
+    return getComputedStyle(element).getPropertyValue(varName).trim();
+  }
+
+  /**
+   * Adds the handles and applys styles to the container
+   */
   private addHandle() {
     let container = this._options.container;
     if (!container) throw new Error("Container element not passed");
 
     if (container.children.length == 2) {
       this._handle = document.createElement("div");
+      this.addHandleStyles();
 
       let secondChild = container.children[1];
       if (!secondChild) throw new Error("No two children");
 
+      this.addContainerStyles();
+      this.addChildrenStyles();
+
       container.insertBefore(this._handle, secondChild);
 
-
-      // add container styles
+      // add listners
     }
   }
+
+  /**
+   * Adds styles to the children of the container
+   */
+  private addChildrenStyles() {
+    const container = this._options.container;
+    if (!container) throw new Error("Container element not passed");
+
+    if (container.children.length < 2) {
+      throw new Error("Container must have at least two children");
+    }
+
+    const firstChild = container.children[0] as HTMLElement;
+    const secondChild = container.children[1] as HTMLElement;
+
+    firstChild.style.flex = `${this._currentChildrenFlexValues.firstChild}`;
+    secondChild.style.flex = `${this._currentChildrenFlexValues.secondChild}`;
+  }
+
+  /**
+   * Adds the styles to the handle
+   */
+  private addHandleStyles() {
+    let handle = this._handle;
+    if (!handle) {
+      throw new Error("Cannot add handle styles to empty element");
+    }
+
+    for (const [property, value] of Object.entries(
+      this._options.handleStyles
+    )) {
+      let computed = "";
+
+      if (this.isCssVariable(value)) {
+        computed = this.getCssVar(value);
+      }
+
+      handle.style[property as any] = computed;
+    }
+  }
+
+  /**
+   * Checks if a string is a css var just checks if it has `--`
+   * @param str The string to check
+   * @returns True or false
+   */
+  private isCssVariable(str: string): boolean {
+    return str.indexOf("--") > 0;
+  }
+
+  /**
+   * Ads the styles to the container
+   */
+  private addContainerStyles() {
+    let container = this._options.container;
+    if (!container) throw new Error("Container element not passed");
+
+    container.style.display = "flex";
+
+    if (this._options.direction === "horizontal") {
+      container.style.flexDirection = "row";
+    } else if (this._options.direction === "vertical") {
+      container.style.flexDirection = "column";
+    } else {
+      container.style.flexDirection = "row";
+    }
+  }
+
+  private removeContainerStyles() {}
 
   /**
    * Remove the handle element and any styles to the container
@@ -130,6 +205,8 @@ export class ResizerTwo {
       container.removeChild(this._handle);
       this._handle = undefined;
     }
+
+    this.removeContainerStyles();
   }
 
   /**

@@ -87,7 +87,8 @@ export class ResizerTwo {
     let container = this._options.container;
     if (!container) throw new Error("Container element not passed");
 
-    if (container.children.length == 2) { // add handle beofre lsitenign if we can
+    if (container.children.length == 2) {
+      // add handle beofre lsitenign if we can
       this.addHandle();
     }
 
@@ -112,11 +113,14 @@ export class ResizerTwo {
       if (!secondChild) throw new Error("No two children");
 
       container.insertBefore(this._handle, secondChild);
+
+
+      // add container styles
     }
   }
 
   /**
-   * Remove the handle element
+   * Remove the handle element and any styles to the container
    */
   private removeHandle() {
     let container = this._options.container;
@@ -124,6 +128,7 @@ export class ResizerTwo {
 
     if (this._handle) {
       container.removeChild(this._handle);
+      this._handle = undefined;
     }
   }
 
@@ -133,6 +138,23 @@ export class ResizerTwo {
   private onMutation() {
     let container = this._options.container;
     if (!container) throw new Error("Container element not passed");
+
+    if (
+      this._handle &&
+      container.contains(this._handle) &&
+      container.children.length === 3
+    ) {
+      return; // if it has two children and handle it's fine we dont need to do anything
+    }
+
+    if (!this._handle && container.children.length === 2) {
+      this.addHandle(); // if there isnt a handle and two elements add it
+      return;
+    }
+
+    // else it has more or else children needed so we ignore
+
+    this.removeHandle();
   }
 
   /**

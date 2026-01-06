@@ -23,7 +23,7 @@ export type ResizerTwoOptions = {
   minFlex: ResizerTwoChildrenFlex;
 
   /**
-   * Optional valuyes to set inital flex values for the children
+   * Optional values to set inital flex values for the children
    */
   initalFlex: ResizerTwoChildrenFlex | undefined;
 
@@ -346,6 +346,10 @@ export class ResizerTwo {
     this._callbacks.add(callback);
   }
 
+  /**
+   * Remove a callback you defined
+   * @param callback The callback to remove
+   */
   remove(callback: () => void) {
     this._callbacks.delete(callback);
   }

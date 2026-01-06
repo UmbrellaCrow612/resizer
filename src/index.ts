@@ -192,7 +192,13 @@ export class ResizerTwo {
     }
   }
 
-  private removeContainerStyles() {}
+  private removeContainerStyles() {
+    let container = this._options.container;
+    if (!container) throw new Error("Container element not passed");
+
+    container.style.removeProperty("display");
+    container.style.removeProperty("direction");
+  }
 
   /**
    * Remove the handle element and any styles to the container

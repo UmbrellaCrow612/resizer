@@ -55,6 +55,13 @@ export class Resizer {
    */
   private readonly _callbacks: Set<() => void> = new Set();
 
+  /**
+   * Used to listen to the container element and run logic when it changes
+   */
+  private observer: MutationObserver = new MutationObserver(() =>
+    this.onMutation()
+  );
+
   constructor(options: ResizerOptions) {
     this._options.handleStyles = {
       ...getDefaultHandleStyles(options),
@@ -83,6 +90,11 @@ export class Resizer {
       throw new Error("Failed to pass a container to watch");
     }
   }
+
+  /**
+   * Runs logic when the container is mutated
+   */
+  private onMutation = () => {};
 
   /**
    * Register a callback to run when a user is moving the handle i.e rezieing

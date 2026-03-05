@@ -40,27 +40,14 @@ export type ResizeCallbacks = {
     pixelsPast: number,
   ) => void;
   onChildCountChange?: (count: number) => void;
+  onDragPastSingleChildThreshold?: (
+    side: "left" | "right" | "top" | "bottom",
+    pixelsPast: number,
+  ) => void;
 };
 
 /**
  * Represents a resizer class which manages the resize behvaiour between two elements.
- *
- * Listen to a target div and adds a handle.
- *
- * When a single element is present the handle is on the left/right for example, when the handle is dragged past a certain point a event emitted for user to
- * to re render the element that was present beofre.
- *
- * When two elements are present the handle acts as a dragable element to change flex values between said two elements.
- *
- * When the user drags past the min flex of given child a event will be emitted to notify the user to unrender said element.
- *
- * When the user no longer wants any handle present you can dispose of it with dispose call.
- *
- * When the user drags the resizer a event is emitted to let the user react to resize being dragged
- *
- * When elements are removed or added it persists flex state between them and also between sessions if you define local stroage key
- *
- * When user drags it automacitlly saves flex state in local storage with key provided
  */
 export class Resizer {
   private _options: ResizerOptions;
@@ -72,6 +59,8 @@ export class Resizer {
   private containerSize = 0;
   private currentFlexValues: [number, number] = [1, 1];
   private _previousTwoChildFlex: [number, number] | null = null;
+  private _singleChildThreshold: number = 50;
+  private _hasEmittedSingleChildThreshold = false;
 
   constructor(options: ResizerOptions, callbacks: ResizeCallbacks = {}) {
     this._options = options;
@@ -115,6 +104,10 @@ export class Resizer {
     this.applyFlexToChildren();
 
     this.updateHandlePosition();
+
+    // Emit initial child count
+    const children = this.getContentChildren();
+    this._callbacks.onChildCountChange?.(children.length);
   }
 
   private getContentChildren(): HTMLElement[] {
@@ -228,15 +221,16 @@ export class Resizer {
   }
 
   private handleMouseDown = (e: MouseEvent) => {
-    // Only handle drag if we have 2 children
-    const children = this.getContentChildren();
-    if (children.length !== 2) return;
-
     this.isDragging = true;
     this.startMousePos =
       this._options.direction === "horizontal" ? e.clientX : e.clientY;
     this.startFlexValues = [...this.currentFlexValues] as [number, number];
     this.containerSize = this.getContainerSize();
+    this._hasEmittedSingleChildThreshold = false;
+
+    // Prevent text selection during drag
+    document.body.style.userSelect = "none";
+    document.body.style.webkitUserSelect = "none";
 
     this._callbacks.onBeginDrag?.();
 
@@ -248,11 +242,21 @@ export class Resizer {
     if (!this.isDragging) return;
 
     this.isDragging = false;
-    this.saveFlexValues(this.currentFlexValues);
-    this._callbacks.onDragFinished?.([...this.currentFlexValues] as [
-      number,
-      number,
-    ]);
+
+    // Restore text selection
+    document.body.style.userSelect = "";
+    document.body.style.webkitUserSelect = "";
+
+    // Only save flex values if we have 2 children
+    const children = this.getContentChildren();
+    if (children.length === 2) {
+      this.saveFlexValues(this.currentFlexValues);
+      this._callbacks.onDragFinished?.([...this.currentFlexValues] as [
+        number,
+        number,
+      ]);
+    }
+
     this.removeDragListeners();
   };
 
@@ -264,6 +268,41 @@ export class Resizer {
     const currentMousePos =
       this._options.direction === "horizontal" ? e.clientX : e.clientY;
     const deltaPixels = currentMousePos - this.startMousePos;
+
+    const children = this.getContentChildren();
+
+    // Handle single child case - check if dragged past threshold INTO the child
+    if (children.length === 1) {
+      const absDelta = Math.abs(deltaPixels);
+
+      if (
+        absDelta > this._singleChildThreshold &&
+        !this._hasEmittedSingleChildThreshold
+      ) {
+        this._hasEmittedSingleChildThreshold = true;
+        
+        // Determine direction: positive delta means dragging INTO the child (right/bottom)
+        // negative delta means dragging away from the child (left/top)
+        const isHorizontal = this._options.direction === "horizontal";
+        let side: "left" | "right" | "top" | "bottom";
+        
+        if (deltaPixels > 0) {
+          // Dragging right (horizontal) or down (vertical) - INTO the child
+          side = isHorizontal ? "right" : "bottom";
+        } else {
+          // Dragging left (horizontal) or up (vertical) - away from child, but since handle is before child,
+          // dragging left means going past the child's left edge (into the space where previous child was)
+          side = isHorizontal ? "left" : "top";
+        }
+        
+        const pixelsPast = absDelta - this._singleChildThreshold;
+        this._callbacks.onDragPastSingleChildThreshold?.(side, pixelsPast);
+      }
+      return;
+    }
+
+    // Handle two children case
+    if (children.length !== 2) return;
 
     // Calculate total flex and current ratio
     const totalFlex = this.startFlexValues[0] + this.startFlexValues[1];
@@ -319,6 +358,9 @@ export class Resizer {
     // Remove drag listeners if active
     if (this.isDragging) {
       this.removeDragListeners();
+      // Restore text selection
+      document.body.style.userSelect = "";
+      document.body.style.webkitUserSelect = "";
     }
 
     // Remove handle
@@ -418,6 +460,18 @@ export class Resizer {
       this._callbacks.onChildCountChange?.(count);
     }
   }
+
+  /**
+   * Set the threshold in pixels for single child drag to emit onDragPastSingleChildThreshold
+   */
+  public setSingleChildThreshold(pixels: number) {
+    this._singleChildThreshold = pixels;
+  }
+
+  /**
+   * Get the current single child drag threshold
+   */
+  public getSingleChildThreshold(): number {
+    return this._singleChildThreshold;
+  }
 }
-
-

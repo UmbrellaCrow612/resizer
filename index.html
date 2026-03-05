@@ -41,7 +41,7 @@
     <script type="module">
       import { Resizer } from "./dist/resizer.js";
 
-      const resizer = new Resizer(
+       const resizer = new Resizer(
         {
           container: document.getElementById("container"),
           direction: "horizontal",
@@ -60,9 +60,6 @@
           onBeginDrag: () => {
             console.log("[onBeginDrag] ran");
           },
-          onChildCountChange: (count) => {
-            console.log(`[onChildCountChange] ran count ${count}`);
-          },
           onDrag: (values) => {
             // console.log(`[onDrag] ran values ${values}`);
           },
@@ -72,13 +69,16 @@
           onDragPastMin: (side, pixels) => {
             console.log(`[onDragPastMin] ran side ${side} pixels ${pixels}`);
           },
+          onDragPastSingleChildThreshold: (side, pixels) => {
+            console.log(`[onDragPastMin] ran side ${side} pixels ${pixels}`);
+          },
         },
       );
 
       setTimeout(() => {
         console.warn("Removeing panel one");
         document.getElementById("panel_one").remove();
-        resizer.refresh()
+        resizer.refresh();
       }, 10000);
     </script>
   </body>

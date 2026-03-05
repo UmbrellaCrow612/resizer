@@ -39,10 +39,6 @@ export type ResizeCallbacks = {
     side: "left" | "right" | "top" | "bottom",
     pixelsPast: number,
   ) => void;
-  onDragPastSingleChildThreshold?: (
-    side: "left" | "right" | "top" | "bottom",
-    pixelsPast: number,
-  ) => void;
 };
 
 /**
@@ -58,7 +54,6 @@ export class Resizer {
   private containerSize = 0;
   private currentFlexValues: [number, number] = [1, 1];
   private _previousTwoChildFlex: [number, number] | null = null;
-  private _singleChildThreshold: number = 50;
 
   constructor(options: ResizerOptions, callbacks: ResizeCallbacks = {}) {
     this._options = options;
@@ -264,27 +259,8 @@ export class Resizer {
 
     const children = this.getContentChildren();
 
-    // Handle single child case - check if dragged past threshold INTO the child
+    // Single child case - no resizing logic, just return
     if (children.length === 1) {
-      const absDelta = Math.abs(deltaPixels);
-
-      // Only emit when we've passed the threshold
-      if (absDelta > this._singleChildThreshold) {
-        const isHorizontal = this._options.direction === "horizontal";
-        let side: "left" | "right" | "top" | "bottom";
-
-        if (deltaPixels > 0) {
-          // Dragging right (horizontal) or down (vertical) - INTO the child
-          side = isHorizontal ? "right" : "bottom";
-        } else {
-          // Dragging left (horizontal) or up (vertical) - away from child, but since handle is before child,
-          // dragging left means going past the child's left edge (into the space where previous child was)
-          side = isHorizontal ? "left" : "top";
-        }
-
-        const pixelsPast = absDelta - this._singleChildThreshold;
-        this._callbacks.onDragPastSingleChildThreshold?.(side, pixelsPast);
-      }
       return;
     }
 
@@ -440,19 +416,5 @@ export class Resizer {
       // More than 2 children - not supported, but still update handle position
       this.removeHandle();
     }
-  }
-
-  /**
-   * Set the threshold in pixels for single child drag to emit onDragPastSingleChildThreshold
-   */
-  public setSingleChildThreshold(pixels: number) {
-    this._singleChildThreshold = pixels;
-  }
-
-  /**
-   * Get the current single child drag threshold
-   */
-  public getSingleChildThreshold(): number {
-    return this._singleChildThreshold;
   }
 }

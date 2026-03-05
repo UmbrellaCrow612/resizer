@@ -16,6 +16,16 @@ export type ResizerOptions = {
    * Which direction children will be draged / direction the handle will drag
    */
   direction: "vertical" | "horizontal";
+
+  /**
+   * The min flex either child can have
+   */
+  minFlex: number;
+
+  /**
+   * Key used for local stroage to persist the flex values between sessions / re renders
+   */
+  storageKey: string;
 };
 
 /**
@@ -88,6 +98,21 @@ export class Resizer {
     this.addHandle();
   }
 
+  private loadFlexValues(): [number, number] {
+    try {
+      const stored = localStorage.getItem(this._options.storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length === 2) {
+          return [parsed[0], parsed[1]];
+        }
+      }
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+    return [1, 1];
+  }
+
   private addHandle() {
     this._handleElement = document.createElement("div");
     const containerElement = this._options.container;
@@ -146,6 +171,9 @@ export class Resizer {
     if (!this.isDragging) {
       return;
     }
+
+    // Read the flex values from local stroage appky those
+    // then change then based on direction they move
   };
 
   private removeHandleEventListeners = () => {

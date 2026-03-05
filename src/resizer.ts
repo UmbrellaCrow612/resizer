@@ -39,7 +39,6 @@ export type ResizeCallbacks = {
     side: "left" | "right" | "top" | "bottom",
     pixelsPast: number,
   ) => void;
-  onChildCountChange?: (count: number) => void;
   onDragPastSingleChildThreshold?: (
     side: "left" | "right" | "top" | "bottom",
     pixelsPast: number,
@@ -60,7 +59,6 @@ export class Resizer {
   private currentFlexValues: [number, number] = [1, 1];
   private _previousTwoChildFlex: [number, number] | null = null;
   private _singleChildThreshold: number = 50;
-  private _hasEmittedSingleChildThreshold = false;
 
   constructor(options: ResizerOptions, callbacks: ResizeCallbacks = {}) {
     this._options = options;
@@ -104,10 +102,6 @@ export class Resizer {
     this.applyFlexToChildren();
 
     this.updateHandlePosition();
-
-    // Emit initial child count
-    const children = this.getContentChildren();
-    this._callbacks.onChildCountChange?.(children.length);
   }
 
   private getContentChildren(): HTMLElement[] {
@@ -226,7 +220,6 @@ export class Resizer {
       this._options.direction === "horizontal" ? e.clientX : e.clientY;
     this.startFlexValues = [...this.currentFlexValues] as [number, number];
     this.containerSize = this.getContainerSize();
-    this._hasEmittedSingleChildThreshold = false;
 
     // Prevent text selection during drag
     document.body.style.userSelect = "none";
@@ -275,17 +268,11 @@ export class Resizer {
     if (children.length === 1) {
       const absDelta = Math.abs(deltaPixels);
 
-      if (
-        absDelta > this._singleChildThreshold &&
-        !this._hasEmittedSingleChildThreshold
-      ) {
-        this._hasEmittedSingleChildThreshold = true;
-        
-        // Determine direction: positive delta means dragging INTO the child (right/bottom)
-        // negative delta means dragging away from the child (left/top)
+      // Only emit when we've passed the threshold
+      if (absDelta > this._singleChildThreshold) {
         const isHorizontal = this._options.direction === "horizontal";
         let side: "left" | "right" | "top" | "bottom";
-        
+
         if (deltaPixels > 0) {
           // Dragging right (horizontal) or down (vertical) - INTO the child
           side = isHorizontal ? "right" : "bottom";
@@ -294,7 +281,7 @@ export class Resizer {
           // dragging left means going past the child's left edge (into the space where previous child was)
           side = isHorizontal ? "left" : "top";
         }
-        
+
         const pixelsPast = absDelta - this._singleChildThreshold;
         this._callbacks.onDragPastSingleChildThreshold?.(side, pixelsPast);
       }
@@ -410,7 +397,6 @@ export class Resizer {
     if (count === 0) {
       // No children, remove handle if exists
       this.removeHandle();
-      this._callbacks.onChildCountChange?.(0);
       return;
     }
 
@@ -429,8 +415,6 @@ export class Resizer {
       // Remove existing handle and reposition
       this.removeHandle();
       this.updateHandlePosition();
-
-      this._callbacks.onChildCountChange?.(1);
     } else if (count === 2) {
       // Transitioning to two children - restore previous flex values if available
       if (this._previousTwoChildFlex !== null) {
@@ -452,12 +436,9 @@ export class Resizer {
       // Remove existing handle and reposition between children
       this.removeHandle();
       this.updateHandlePosition();
-
-      this._callbacks.onChildCountChange?.(2);
     } else {
       // More than 2 children - not supported, but still update handle position
       this.removeHandle();
-      this._callbacks.onChildCountChange?.(count);
     }
   }
 

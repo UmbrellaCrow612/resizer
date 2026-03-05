@@ -41,6 +41,7 @@ export type ResizerOptions = {
 export class Resizer {
   private _options: ResizerOptions;
   private _handleElement: HTMLDivElement | null = null;
+  private isDragging = false;
 
   constructor(options: ResizerOptions) {
     this._options = options;
@@ -125,7 +126,32 @@ export class Resizer {
     if (!handle) {
       throw new Error("Cannot add event listeners to handle as is null");
     }
+
+    handle.addEventListener("mousedown", this.handleMouseDown);
   }
+
+  private handleMouseDown = () => {
+    this.isDragging = true;
+
+    document.addEventListener("mouseup", this.handleMouseUp);
+    document.addEventListener("mousemove", this.handleMouseMove);
+  };
+
+  private handleMouseUp = () => {
+    this.isDragging = false;
+    this.removeHandleEventListeners();
+  };
+
+  private handleMouseMove = () => {
+    if (!this.isDragging) {
+      return;
+    }
+  };
+
+  private removeHandleEventListeners = () => {
+    document.removeEventListener("mouseup", this.handleMouseUp);
+    document.removeEventListener("mousemove", this.handleMouseMove);
+  };
 
   /**
    * Remove the hande and any extra styles rezier applied
@@ -138,6 +164,8 @@ export class Resizer {
       const el = child as HTMLElement;
       el.style.flex = "";
     });
+
+    this.removeHandleEventListeners();
   }
 
   /**

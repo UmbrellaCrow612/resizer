@@ -40,6 +40,7 @@ export type ResizerOptions = {
  */
 export class Resizer {
   private _options: ResizerOptions;
+  private _handleElement: HTMLDivElement | null = null;
 
   constructor(options: ResizerOptions) {
     this._options = options;
@@ -82,6 +83,48 @@ export class Resizer {
       const el = child as HTMLElement;
       el.style.flex = "1";
     });
+
+    this.addHandle();
+  }
+
+  private addHandle() {
+    this._handleElement = document.createElement("div");
+    const containerElement = this._options.container;
+
+    // insert it between element one and element two
+    // or
+    // if one element before said element
+    if (containerElement.children.length === 2) {
+      const firstChild = containerElement.children[0] as HTMLDivElement;
+      firstChild.after(this._handleElement);
+    } else if (containerElement.children.length === 1) {
+      // Insert before the single existing child
+      const singleChild = containerElement.children[0] as HTMLDivElement;
+      singleChild.before(this._handleElement);
+    } else {
+      throw new Error("Container element does not contain 2 or 1 elements");
+    }
+
+    this.addHandleStyles();
+    this.addHandleEventListeners();
+  }
+
+  private addHandleStyles() {
+    const handle = this._handleElement;
+    if (!handle) {
+      throw new Error("Cannot add styles to handle as is null");
+    }
+
+    Object.entries(this._options.handleStyles).forEach(([property, value]) => {
+      handle.style[property as any] = value;
+    });
+  }
+
+  private addHandleEventListeners() {
+    const handle = this._handleElement;
+    if (!handle) {
+      throw new Error("Cannot add event listeners to handle as is null");
+    }
   }
 
   /**

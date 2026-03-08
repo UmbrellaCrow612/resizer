@@ -26,6 +26,11 @@ export type ResizerOptions = {
    * Key used for local storage to persist the flex values between sessions / re renders
    */
   storageKey: string;
+
+  /**
+   * Extra class names you want to add to the handle HTML element
+   */
+  classNames: string[];
 };
 
 /**
@@ -143,6 +148,10 @@ export class Resizer {
 
     Object.entries(this._options.handleStyles).forEach(([property, value]) => {
       this._handleElement!.style[property as any] = value;
+    });
+
+    this._options.classNames.forEach((x) => {
+      this._handleElement?.classList.add(x);
     });
   }
 

@@ -24,11 +24,28 @@
       .container {
         display: flex;
         flex: 1;
+        position: relative;
       }
 
       .panel {
         flex: 1;
         overflow: auto;
+        padding: 20px;
+        background: #1e1e1e;
+        color: white;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* Visual indicator for the reopen handle */
+      .reopen-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-size: 12px;
       }
     </style>
   </head>
@@ -42,72 +59,152 @@
       import { Resizer } from "./dist/resizer.js";
       import { ResizerReOpenHandle } from "./dist/reponHandle.js";
 
-      const resizer = new Resizer(
-        {
-          container: document.getElementById("container"),
-          direction: "horizontal",
-          handleStyles: {
-            width: "8px",
-            background: "#2a2a2a",
-            cursor: "col-resize",
-            transition: "background 0.2s ease",
-            position: "relative",
-            zIndex: "10",
-          },
-          minFlex: 0.3,
-          storageKey: "storage_key",
-        },
-        {
-          onBeginDrag: () => {
-            console.log("[onBeginDrag] ran");
-          },
-          onDrag: (values) => {
-            // console.log(`[onDrag] ran values ${values}`);
-          },
-          onDragFinished: (values) => {
-            console.log(`[onDragFinished] ran values ${values}`);
-          },
-          onDragPastMin: (side, pixels) => {
-            console.log(`[onDragPastMin] ran side ${side} pixels ${pixels}`);
-          },
-          onDragPastSingleChildThreshold: (side, pixels) => {
-            console.log(`[onDragPastMin] ran side ${side} pixels ${pixels}`);
-          },
-        },
-      );
+      let resizer = null;
+      let reopenHandle = null;
+      const container = document.getElementById("container");
+      const panelOne = document.getElementById("panel_one");
+      const panelTwo = document.getElementById("panel_two");
 
-      setTimeout(() => {
-        resizer.dispose();
+      // Store panelOne content for restoration
+      const panelOneContent = panelOne.innerHTML;
 
-        console.warn("Set timeout run");
-        document.getElementById("panel_one").remove();
+      function createResizer() {
+        // Ensure both panels are in DOM
+        if (!document.getElementById("panel_one")) {
+          // Restore panel_one if removed
+          const newPanelOne = document.createElement("div");
+          newPanelOne.id = "panel_one";
+          newPanelOne.className = "panel";
+          newPanelOne.innerHTML = panelOneContent;
+          container.insertBefore(newPanelOne, panelTwo);
+        }
 
-        const reopenHandle = new ResizerReOpenHandle(
+        // Remove reopen handle if exists
+        if (reopenHandle) {
+          reopenHandle.dispose();
+          reopenHandle = null;
+        }
+
+        resizer = new Resizer(
           {
-            container: document.getElementById("container"),
+            container: container,
+            direction: "horizontal",
             handleStyles: {
-              height: "8px",
+              width: "8px",
               background: "#2a2a2a",
               cursor: "col-resize",
               transition: "background 0.2s ease",
               position: "relative",
               zIndex: "10",
+              flexShrink: "0",
             },
-            position: "bottom",
+            minFlex: 0.1, // Lower min to allow collapsing
+            storageKey: "storage_key",
           },
           {
-            onBeginDrag() {
-              console.log("[ResizerReOpenHandle] onBeginDrag ran");
+            onBeginDrag: () => {
+              console.log("[Resizer] onBeginDrag");
             },
-            onDrag(pixels) {
-              console.log(`[ResizerReOpenHandle] onDrag ran ${pixels}`);
+            onDrag: (values) => {
+              // Optional: live feedback
             },
-            onDragFinished(pixels) {
-              console.log(`[ResizerReOpenHandle] onDragFinished ran ${pixels}`);
+            onDragFinished: (values) => {
+              console.log(`[Resizer] onDragFinished: ${values}`);
+            },
+            onDragPastMin: (side, pixels) => {
+              console.log(`[Resizer] onDragPastMin: ${side}, ${pixels}px`);
+
+              // If dragged 50px past left minimum, collapse panel
+              if (side === "left" && pixels > 50) {
+                collapsePanel();
+              }
             },
           },
         );
-      }, 10000);
+      }
+
+      function collapsePanel() {
+        console.log("[App] Collapsing panel...");
+
+        // Dispose resizer
+        resizer.dispose();
+        resizer = null;
+
+        // Remove panel_one from DOM
+        const p1 = document.getElementById("panel_one");
+        if (p1) p1.remove();
+
+        // Create reopen handle on the left side of remaining panel
+        reopenHandle = new ResizerReOpenHandle(
+          {
+            container: container,
+            handleStyles: {
+              width: "20px",
+              background: "#2a2a2a",
+              cursor: "col-resize",
+              transition: "background 0.2s ease",
+              position: "relative",
+              zIndex: "10",
+              flexShrink: "0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            },
+            position: "left", // Handle on left side of panel_two
+          },
+          {
+            onBeginDrag() {
+              console.log("[ReOpenHandle] onBeginDrag");
+            },
+            onDrag(pixels) {
+              console.log(`[ReOpenHandle] onDrag: ${pixels}px`);
+
+              // If dragged 50px to the right (positive), restore panel
+              if (pixels > 50) {
+                restorePanel();
+              }
+            },
+            onDragFinished(pixels) {
+              console.log(`[ReOpenHandle] onDragFinished: ${pixels}px`);
+            },
+          },
+        );
+
+        // Add visual indicator
+        const handle = container.querySelector(
+          "div[style*='cursor: col-resize']",
+        );
+        if (handle) {
+          handle.innerHTML = "›";
+          handle.style.color = "#666";
+          handle.style.fontSize = "16px";
+        }
+      }
+
+      function restorePanel() {
+        console.log("[App] Restoring panel...");
+
+        // Dispose reopen handle
+        if (reopenHandle) {
+          reopenHandle.dispose();
+          reopenHandle = null;
+        }
+
+        // Recreate panel_one
+        const newPanelOne = document.createElement("div");
+        newPanelOne.id = "panel_one";
+        newPanelOne.className = "panel";
+        newPanelOne.innerHTML = panelOneContent;
+
+        // Insert before panel_two
+        container.insertBefore(newPanelOne, panelTwo);
+
+        // Restore resizer
+        createResizer();
+      }
+
+      // Initialize
+      createResizer();
     </script>
   </body>
 </html>

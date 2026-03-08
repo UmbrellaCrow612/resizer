@@ -1,12 +1,28 @@
+/**
+ * Options to change the behaviour
+ */
 export type ReOpenHandleOptions = {
-  /** Container with exactly one child */
+  /**
+   * Container with exactly one child
+   */
   container: HTMLDivElement;
-  /** Handle styles */
+  /**
+   * Handle styles
+   */
   handleStyles: Record<string, string>;
-  /** Which side to place the handle: "left"|"top" or "right"|"bottom" */
+  /**
+   * Which side to place the handle: "left"|"top" or "right"|"bottom"
+   */
   position: "left" | "right" | "top" | "bottom";
+  /**
+   * Extra class names you want to add to the HTML element handle
+   */
+  classNames: string[];
 };
 
+/**
+ * Callbacks you can register
+ */
 export type ReOpenHandleCallbacks = {
   onBeginDrag?: () => void;
   /** Called during drag with pixels dragged (positive = toward the open side) */
@@ -91,6 +107,10 @@ export class ResizerReOpenHandle {
     Object.entries(this._options.handleStyles).forEach(([prop, val]) => {
       this._handleElement!.style[prop as any] = val;
     });
+
+    this._options.classNames.forEach((x) => {
+      this._handleElement?.classList.add(x);
+    });
   }
 
   private addListeners() {
@@ -103,7 +123,6 @@ export class ResizerReOpenHandle {
     this.currentDragPixels = 0;
 
     document.body.style.userSelect = "none";
-    document.body.style.webkitUserSelect = "none";
 
     this._callbacks.onBeginDrag?.();
 
@@ -132,7 +151,6 @@ export class ResizerReOpenHandle {
 
     this.isDragging = false;
     document.body.style.userSelect = "";
-    document.body.style.webkitUserSelect = "";
 
     this._callbacks.onDragFinished?.(this.currentDragPixels);
 
@@ -140,31 +158,23 @@ export class ResizerReOpenHandle {
     document.removeEventListener("mousemove", this.handleMouseMove);
   };
 
-  /** Get current drag distance in pixels */
+  /**
+   * Get current drag distance in pixels
+   */
   public getDragPixels(): number {
     return this.currentDragPixels;
   }
 
-  /** Programmatically set position (removes and re-creates handle) */
-  public setPosition(position: "left" | "right" | "top" | "bottom") {
-    this._options.position = position;
-    this.isHorizontal = position === "left" || position === "right";
-    this._options.container.style.flexDirection = this.isHorizontal
-      ? "row"
-      : "column";
-
-    this.removeHandle();
-    this.createHandle();
-  }
-
-  /** Clean up and remove handle - safe to call mid-drag */
+  /**
+   * Clean up and remove handle - safe to call mid-drag
+   */
   public dispose() {
     document.removeEventListener("mouseup", this.handleMouseUp);
     document.removeEventListener("mousemove", this.handleMouseMove);
 
     if (this.isDragging) {
       document.body.style.userSelect = "";
-      this.isDragging = false; 
+      this.isDragging = false;
     }
 
     this.removeHandle();

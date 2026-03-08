@@ -8,76 +8,220 @@ A lightweight, zero-dependency TypeScript library that automatically manages a r
 npm install umbr-resizer-two
 ```
 
----
+## Example
 
-## Features
-
-* **Dynamic Detection**: Automatically injects a resizer handle when exactly two children are present.
-* **Flex-Based**: Uses CSS flexbox for smooth, responsive layouts.
-* **Directional Support**: Supports both `horizontal` (columns) and `vertical` (rows) resizing.
-* **State Persistence**: Easily save and restore panel sizes using callbacks.
-* **Highly Customizable**: Pass custom CSS properties directly to the resizer handle.
-
----
-
-## Quick Start
-
-### HTML Structure
-
-You only need a container with two child elements.
+Instead of importing from dist import it from npm package name
 
 ```html
-<div id="container">
-  <div class="panel">Panel 1</div>
-  <div class="panel">Panel 2</div>
-</div>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resizer Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        display: flex;
+      }
+
+      .container {
+        display: flex;
+        flex: 1;
+        position: relative;
+      }
+
+      .panel {
+        flex: 1;
+        overflow: auto;
+        padding: 20px;
+        background: #1e1e1e;
+        color: white;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* Visual indicator for the reopen handle */
+      .reopen-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container" class="container">
+      <div class="panel" id="panel_one">Panel 1</div>
+      <div class="panel" id="panel_two">Panel 2</div>
+    </div>
+
+    <script type="module">
+      import { Resizer } from "./dist/resizer.js";
+      import { ResizerReOpenHandle } from "./dist/reponHandle.js";
+
+      let resizer = null;
+      let reopenHandle = null;
+      const container = document.getElementById("container");
+      const panelOne = document.getElementById("panel_one");
+      const panelTwo = document.getElementById("panel_two");
+
+      // Store panelOne content for restoration
+      const panelOneContent = panelOne.innerHTML;
+
+      function createResizer() {
+        // Ensure both panels are in DOM
+        if (!document.getElementById("panel_one")) {
+          // Restore panel_one if removed
+          const newPanelOne = document.createElement("div");
+          newPanelOne.id = "panel_one";
+          newPanelOne.className = "panel";
+          newPanelOne.innerHTML = panelOneContent;
+          container.insertBefore(newPanelOne, panelTwo);
+        }
+
+        // Remove reopen handle if exists
+        if (reopenHandle) {
+          reopenHandle.dispose();
+          reopenHandle = null;
+        }
+
+        resizer = new Resizer(
+          {
+            container: container,
+            direction: "horizontal",
+            handleStyles: {
+              width: "8px",
+              background: "#2a2a2a",
+              cursor: "col-resize",
+              transition: "background 0.2s ease",
+              position: "relative",
+              zIndex: "10",
+              flexShrink: "0",
+            },
+            minFlex: 0.1, // Lower min to allow collapsing
+            storageKey: "storage_key",
+          },
+          {
+            onBeginDrag: () => {
+              console.log("[Resizer] onBeginDrag");
+            },
+            onDrag: (values) => {
+              // Optional: live feedback
+            },
+            onDragFinished: (values) => {
+              console.log(`[Resizer] onDragFinished: ${values}`);
+            },
+            onDragPastMin: (side, pixels) => {
+              console.log(`[Resizer] onDragPastMin: ${side}, ${pixels}px`);
+
+              // If dragged 50px past left minimum, collapse panel
+              if (side === "left" && pixels > 50) {
+                collapsePanel();
+              }
+            },
+          },
+        );
+      }
+
+      function collapsePanel() {
+        console.log("[App] Collapsing panel...");
+
+        // Dispose resizer
+        resizer.dispose();
+        resizer = null;
+
+        // Remove panel_one from DOM
+        const p1 = document.getElementById("panel_one");
+        if (p1) p1.remove();
+
+        // Create reopen handle on the left side of remaining panel
+        reopenHandle = new ResizerReOpenHandle(
+          {
+            container: container,
+            handleStyles: {
+              width: "20px",
+              background: "#2a2a2a",
+              cursor: "col-resize",
+              transition: "background 0.2s ease",
+              position: "relative",
+              zIndex: "10",
+              flexShrink: "0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            },
+            position: "left", // Handle on left side of panel_two
+          },
+          {
+            onBeginDrag() {
+              console.log("[ReOpenHandle] onBeginDrag");
+            },
+            onDrag(pixels) {
+              console.log(`[ReOpenHandle] onDrag: ${pixels}px`);
+
+              // If dragged 50px to the right (positive), restore panel
+              if (pixels > 50) {
+                restorePanel();
+              }
+            },
+            onDragFinished(pixels) {
+              console.log(`[ReOpenHandle] onDragFinished: ${pixels}px`);
+            },
+          },
+        );
+
+        // Add visual indicator
+        const handle = container.querySelector(
+          "div[style*='cursor: col-resize']",
+        );
+        if (handle) {
+          handle.innerHTML = "›";
+          handle.style.color = "#666";
+          handle.style.fontSize = "16px";
+        }
+      }
+
+      function restorePanel() {
+        console.log("[App] Restoring panel...");
+
+        // Dispose reopen handle
+        if (reopenHandle) {
+          reopenHandle.dispose();
+          reopenHandle = null;
+        }
+
+        // Recreate panel_one
+        const newPanelOne = document.createElement("div");
+        newPanelOne.id = "panel_one";
+        newPanelOne.className = "panel";
+        newPanelOne.innerHTML = panelOneContent;
+
+        // Insert before panel_two
+        container.insertBefore(newPanelOne, panelTwo);
+
+        // Restore resizer
+        createResizer();
+      }
+
+      // Initialize
+      createResizer();
+    </script>
+  </body>
+</html>
 
 ```
-
-### Initialization
-
-```javascript
-import { ResizerTwo } from 'umbr-resizer-two';
-
-const container = document.getElementById("container");
-
-const resizer = new ResizerTwo({
-  container: container,
-  direction: "horizontal", // or "vertical"
-  minFlex: { firstChild: 0.1, secondChild: 0.1 },
-  handleStyles: {
-    width: "5px",
-    backgroundColor: "#555",
-    cursor: "col-resize",
-  },
-  initalFlex: { firstChild: 1, secondChild: 1 }, 
-});
-
-// Save the state when the user finishes resizing
-resizer.on(() => {
-  const currentValues = resizer.getFlexValues();
-  localStorage.setItem('my_layout', JSON.stringify(currentValues));
-});
-
-```
-
----
-
-## Options API
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `container` | `HTMLDivElement` | The parent element containing the two panels. |
-| `direction` | `"horizontal" | "vertical"` | The flow of the children. |
-| `minFlex` | `ResizerTwoChildrenFlex` | The minimum flex value allowed for each child. |
-| `initalFlex` | `ResizerTwoChildrenFlex` | (Optional) The starting flex values for the panels. |
-| `handleStyles` | `Record<string, string>` | CSS key-value pairs to style the resizer handle. |
-
----
-
-## Methods
-
-* **`on(callback: () => void)`**: Adds a listener that fires whenever the panels are resized.
-* **`getFlexValues()`**: Returns the current flex values for both children.
-* **`remove(callback: () => void)`**: Removes a specific listener.
-* **`dispose()`**: Cleans up the mutation observer, event listeners, and removes the handle from the DOM.

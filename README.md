@@ -8,8 +8,6 @@ A lightweight, zero-dependency TypeScript library that automatically manages a r
 npm install umbr-resizer-two
 ```
 
-
-
 ## Example
 
 Instead of importing from dist import it from npm package name

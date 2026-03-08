@@ -35,13 +35,13 @@
   <body>
     <div id="container" class="container">
       <div class="panel" id="panel_one">Panel 1</div>
-      <div class="panel">Panel 2</div>
+      <div class="panel" id="panel_two">Panel 2</div>
     </div>
 
     <script type="module">
       import { Resizer } from "./dist/resizer.js";
 
-       const resizer = new Resizer(
+      const resizer = new Resizer(
         {
           container: document.getElementById("container"),
           direction: "horizontal",
@@ -52,6 +52,7 @@
             transition: "background 0.2s ease",
             position: "relative",
             zIndex: "10",
+            flexShrink: "0", // <-- Add this to prevent flex from resizing the handle
           },
           minFlex: 0.3,
           storageKey: "storage_key",
@@ -74,12 +75,6 @@
           },
         },
       );
-
-      setTimeout(() => {
-        console.warn("Removeing panel one");
-        document.getElementById("panel_one").remove();
-        resizer.refresh();
-      }, 10000);
     </script>
   </body>
 </html>

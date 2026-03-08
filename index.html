@@ -40,6 +40,7 @@
 
     <script type="module">
       import { Resizer } from "./dist/resizer.js";
+      import { ResizerReOpenHandle } from "./dist/reponHandle.js";
 
       const resizer = new Resizer(
         {
@@ -52,7 +53,6 @@
             transition: "background 0.2s ease",
             position: "relative",
             zIndex: "10",
-            flexShrink: "0", // <-- Add this to prevent flex from resizing the handle
           },
           minFlex: 0.3,
           storageKey: "storage_key",
@@ -75,6 +75,39 @@
           },
         },
       );
+
+      setTimeout(() => {
+        resizer.dispose();
+
+        console.warn("Set timeout run");
+        document.getElementById("panel_one").remove();
+
+        const reopenHandle = new ResizerReOpenHandle(
+          {
+            container: document.getElementById("container"),
+            handleStyles: {
+              height: "8px",
+              background: "#2a2a2a",
+              cursor: "col-resize",
+              transition: "background 0.2s ease",
+              position: "relative",
+              zIndex: "10",
+            },
+            position: "bottom",
+          },
+          {
+            onBeginDrag() {
+              console.log("[ResizerReOpenHandle] onBeginDrag ran");
+            },
+            onDrag(pixels) {
+              console.log(`[ResizerReOpenHandle] onDrag ran ${pixels}`);
+            },
+            onDragFinished(pixels) {
+              console.log(`[ResizerReOpenHandle] onDragFinished ran ${pixels}`);
+            },
+          },
+        );
+      }, 10000);
     </script>
   </body>
 </html>

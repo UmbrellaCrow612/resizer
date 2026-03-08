@@ -226,12 +226,14 @@ export class Resizer {
 
   /**
    * Remove the handle and any extra styles resizer applied
+   * Safe to call from any callback
    */
   public dispose() {
+    this.removeDragListeners();
+
     if (this.isDragging) {
-      this.removeDragListeners();
       document.body.style.userSelect = "";
-      document.body.style.webkitUserSelect = "";
+      this.isDragging = false;
     }
 
     this.removeHandle();
